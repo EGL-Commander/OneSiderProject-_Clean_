@@ -5,4 +5,9 @@ from .models import Category, Tag, Project
 
 admin.site.register(Category)
 admin.site.register(Tag)
-admin.site.register(Project)
+# admin.site.register(Project)
+
+@admin.register(Project)
+class ProjectAdmin(admin.ModelAdmin):
+    list_display = ('title', 'slug', 'price', 'is_active')
+    readonly_fields = ('slug',)
