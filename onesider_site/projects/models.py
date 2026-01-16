@@ -54,6 +54,12 @@ class Project(models.Model):
 
     price = models.DecimalField(max_digits=8, decimal_places=2)
 
+    thumbnail = models.ImageField(
+        upload_to='project_thumbnails/',
+        null=True,
+        blank=True
+        )
+
     views_count = models.PositiveIntegerField(default=0)
     purchases_count = models.PositiveIntegerField(default=0)
     saves_count = models.PositiveIntegerField(default=0)
