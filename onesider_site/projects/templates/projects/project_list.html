@@ -7,7 +7,15 @@
 
             <li>
 
-                <h3> {{ project.title }} </h3>
+                <h3>
+                
+                    <a href="{% url 'project_detail' project.slug %}">
+
+                        {{ project.title }}
+                    
+                    </a>
+                
+                </h3>
                 <p> {{ project.short_description }} </p>
                 <p> <strong>Type : </strong> {{ project.get_project_type_display }} </p>
                 <p> <strong>Price : </strong> {{ project.price }} </p>

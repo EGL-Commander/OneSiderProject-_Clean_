@@ -1,0 +1,18 @@
+<h1> {{ project.title }} </h1>
+
+{% if project.thumbnail %}
+    <img src="{{ project.thumbnail.url }}" alt="{{ project.title }}" width="400">
+{% endif %}
+
+<p><strong> Type : </strong> {{ project.get_project_type_display }} </p>
+<p><strong> Price : </strong> {{ project.price }} </p>
+
+<hr>
+
+<p><strong>Short Description :</strong></p>
+<p> {{ project.short_description }} </p>
+
+<hr>
+
+<p><strong>Full Description : </strong></p>
+<p> {{ project.descritpion }} </p>
