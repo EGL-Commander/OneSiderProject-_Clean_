@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404
-from .models import Project
+from .models import Project, Category
 
 # Create your views here.
 
@@ -10,3 +10,19 @@ def project_list(request):
 def project_detail(request, slug):
     project = get_object_or_404(Project, slug=slug, is_active=True)
     return render(request, 'projects/project_detail.html', {'project': project})
+
+def category_projects(request, category_slug):
+    category = get_object_or_404(Category, slug = category_slug)
+    projects = Project.objects.filter(
+        categories = category,
+        is_active = True,
+    ).order_by('?')
+
+    return render(
+        request,
+        'projects/category_projects.html',
+        {
+            'category' : category,
+            'projects' : projects
+        }
+    )

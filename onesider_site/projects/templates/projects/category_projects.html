@@ -1,0 +1,41 @@
+<h1> {{ category.name }} </h1>
+
+{% if category.description %}
+    <p> {{ category.description }} </p>
+{% endif %}
+
+<hr>
+
+{% if projects %}
+    <ul>
+
+        {% for project in projects %}
+            <li>
+
+                <h3>
+
+                    <a href="{% url 'project_detail' project.slug %}">
+                        {{ project.title }}
+                    </a>
+
+                </h3>
+
+                <p> {{ project.short_description }} </p>
+                <p><strong> Type : </strong> {{ project.get_project_type_display }} </p>
+                <p><strong> Price :</strong> ₹{{ project.price }} </p>
+
+                {% if project.thumbnail %}
+                    <img src="{{ project.thumbnail.url }}" width="200">
+                {% endif %}
+
+                <hr>
+
+            </li>
+
+        {% endfor %}
+
+    </ul>
+
+{% else %}
+    <p>No Projects Found in this Category.</p>
+{% endif %}
