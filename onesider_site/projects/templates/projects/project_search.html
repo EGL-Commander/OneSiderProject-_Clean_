@@ -1,0 +1,32 @@
+{% extends 'main/base.html' %}
+{% block title %}Search - OneSider{% endblock %}
+
+{% block content %}
+<h1>Search</h1>
+
+<form method="get" action="{% url 'project_search' %}">
+    <input type="text" name="q" placeholder="Search projects..." value="{{ q }}">
+    <button type="submit">Search</button>
+</form>
+
+<hr>
+
+{% if q %}
+    <p>Results for: <b>{{ q }}</b></p>
+{% endif %}
+
+{% if projects %}
+    <ul>
+        {% for project in projects %}
+            <li>
+                <a href="{% url 'project_detail' project.slug %}">
+                    {{ project.title }}
+                </a>
+                — ₹{{ project.price }}
+            </li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>No matching projects found.</p>
+{% endif %}
+{% endblock %}
