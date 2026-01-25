@@ -6,6 +6,7 @@ from purchases.models import Purchase, DownloadToken
 from projects.models import Project
 from django.http import HttpResponse, HttpResponseForbidden
 from django.utils import timezone
+from purchases.utils import cleanup_expired_tokens
 
 # Create your views here.
 
@@ -111,6 +112,18 @@ def download_project(request, slug):
 
     if not has_access:
         return HttpResponseForbidden("You have not purchased this project.")
+    
+    cleanup_expired_tokens()
+
+    recent_tokens = DownloadToken.objects.filter(
+        user=request.user,
+        project=project,
+        created_at__gte=timezone.now() - timezone.timedelta(minutes=10)
+    )
+
+    if recent_tokens.exists():
+        return HttpResponseForbidden("Please wait before requesting another download.")
+
 
     token = DownloadToken.objects.create(
         user = request.user,
