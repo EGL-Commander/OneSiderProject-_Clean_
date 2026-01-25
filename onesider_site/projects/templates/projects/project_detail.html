@@ -16,3 +16,23 @@
 
 <p><strong>Full Description : </strong></p>
 <p> {{ project.descritpion }} </p>
+
+<hr>
+
+<p><strong>Views:</strong> {{ project.views_count }}</p>
+<p><strong>Saves:</strong> {{ project.saves_count }}</p>
+
+{% if user.is_authenticated %}
+    <form method="post" action="{% url 'toggle_save' project.slug %}">
+        {% csrf_token %}
+        <button type="submit">
+            {% if project in user.profile.saved_projects.all %}
+                Unsave
+            {% else %}
+                Save
+            {% endif %}
+        </button>
+    </form>
+{% else %}
+    <p><a href="/accounts/login/">Login</a> to save this project.</p>
+{% endif %}
