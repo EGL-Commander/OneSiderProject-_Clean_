@@ -7,6 +7,7 @@ from .forms import ProfileUpdateForm
 @login_required
 def edit_profile(request):
     profile = request.user.profile
+    saved_projects = profile.saved_projects.all()
     
     if request.method == 'POST':
         form = ProfileUpdateForm(request.POST, request.FILES, instance=profile)
@@ -16,4 +17,11 @@ def edit_profile(request):
     else:
         form = ProfileUpdateForm(instance=profile)
 
-    return render(request, 'accounts/edit_profile.html', {'form' : form})
+    return render(
+        request,
+        'accounts/edit_profile.html',
+        {
+            'form' : form,
+            'saved_projects': saved_projects
+            }
+        )

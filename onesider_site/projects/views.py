@@ -55,11 +55,12 @@ def toggle_save(request, slug):
     project = get_object_or_404(Project, slug=slug, is_active=True)
     profile = request.user.profile
 
-    if project in profile.saved_projects.all():
+    if profile.saved_projects.filter(pk=project.pk).exists():
         profile.saved_projects.remove(project)
-        Project.objects.filter(pk=project.pk).update(saves_count=F('saves_count') - 1)
     else:
         profile.saved_projects.add(project)
-        Project.objects.filter(pk=project.pk).update(saves_count=F('saves_count') + 1)
+
+    true_count = project.saved_by.count()
+    Project.objects.filter(pk=project.pk).update(saves_count=true_count)
 
     return redirect('project_detail', slug=project.slug)

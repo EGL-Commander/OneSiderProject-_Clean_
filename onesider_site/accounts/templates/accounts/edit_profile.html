@@ -8,3 +8,21 @@
     <button type="submit">Save</button>
 
 </form>
+
+<hr>
+
+<h3>Saved Projects</h3>
+
+{% if saved_projects %}
+    <ul>
+        {% for project in saved_projects %}
+            <li>
+                <a href="{% url 'project_detail' project.slug %}">
+                    {{ project.title }}
+                </a>
+            </li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>No saved projects yet.</p>
+{% endif %}
