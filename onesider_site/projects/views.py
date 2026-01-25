@@ -2,9 +2,10 @@ from django.shortcuts import render, get_object_or_404, redirect
 from .models import Project, Category, Project
 from django.db.models import Q, F
 from django.contrib.auth.decorators import login_required
-from purchases.models import Purchase
+from purchases.models import Purchase, DownloadToken
 from projects.models import Project
 from django.http import HttpResponse, HttpResponseForbidden
+from django.utils import timezone
 
 # Create your views here.
 
@@ -111,8 +112,30 @@ def download_project(request, slug):
     if not has_access:
         return HttpResponseForbidden("You have not purchased this project.")
 
+    token = DownloadToken.objects.create(
+        user = request.user,
+        project=project
+    )
+
+    return redirect('download_token', token=token.token)
+
+@login_required
+def download_with_token(request, token):
+    token_obj = get_object_or_404(DownloadToken, token=token)
+
+    if token_obj.user != request.user:
+        return HttpResponseForbidden("Invalid token.")
+
+    if not token_obj.is_valid():
+        return HttpResponseForbidden("Token expired or already used.")
+
+    token_obj.is_used = True
+    token_obj.save(update_fields=['is_used'])
+
     return HttpResponse(
-        f"✅ Authorized.\n"
-        f"Storage: {project.get_cloud_storage_type_display()}\n"
-        f"Download link: {project.cloud_file_id}"
-        )
+        f"✅ Authorized download\n\n"
+        f"Project: {token_obj.project.title}\n"
+        f"Storage: {token_obj.project.get_cloud_storage_type_display()}\n"
+        f"File ID: {token_obj.project.cloud_file_id}\n\n"
+        f"(Cloud delivery comes next)"
+    )

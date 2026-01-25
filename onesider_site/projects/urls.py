@@ -8,5 +8,6 @@ urlpatterns = [
     path('<slug:slug>/save/', views.toggle_save, name='toggle_save'),
     path('<slug:slug>/buy/', views.buy_project, name='buy_project'),
     path('<slug:slug>/download/', views.download_project, name='download_project'),
+    path('download/token/<uuid:token>/', views.download_with_token, name='download_token'),
     path('<slug:slug>/', views.project_detail, name='project_detail'),
 ]
