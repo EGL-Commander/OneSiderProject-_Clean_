@@ -34,5 +34,5 @@
         </button>
     </form>
 {% else %}
-    <p><a href="/accounts/login/">Login</a> to save this project.</p>
+    <p><a href="{% url 'login' %}?next={{ request.path }}">Login</a> to save this project.</p>
 {% endif %}

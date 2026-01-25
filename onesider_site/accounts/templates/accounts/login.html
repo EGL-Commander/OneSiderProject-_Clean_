@@ -5,7 +5,10 @@
 {% endif %}
 
 <form method="post">
-  {% csrf_token %}
-  {{ form.as_p }}
-  <button type="submit">Login</button>
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Login</button>
+    {% if next %}
+        <input type="hidden" name="next" value="{{ next }}">
+    {% endif %}
 </form>
