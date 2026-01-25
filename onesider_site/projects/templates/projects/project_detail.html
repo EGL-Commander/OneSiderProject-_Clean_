@@ -15,7 +15,7 @@
 <hr>
 
 <p><strong>Full Description : </strong></p>
-<p> {{ project.descritpion }} </p>
+<p> {{ project.description }} </p>
 
 <hr>
 
@@ -35,4 +35,17 @@
     </form>
 {% else %}
     <p><a href="{% url 'login' %}?next={{ request.path }}">Login</a> to save this project.</p>
+{% endif %}
+
+{% if user.is_authenticated %}
+    {% if has_purchased %}
+        <p><b>✅ Purchased</b></p>
+    {% else %}
+        <form method="post" action="{% url 'buy_project' project.slug %}">
+            {% csrf_token %}
+            <button type="submit">Buy (Test)</button>
+        </form>
+    {% endif %}
+{% else %}
+    <p><a href="{% url 'login' %}?next={{ request.path }}">Login</a> to purchase.</p>
 {% endif %}
