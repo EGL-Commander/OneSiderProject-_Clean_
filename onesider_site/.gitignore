@@ -49,3 +49,6 @@ yarn-error.log
 # Backup files
 *.bak
 *.old
+
+# Secret Files
+**/secrets/

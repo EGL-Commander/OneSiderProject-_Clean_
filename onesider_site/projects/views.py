@@ -4,9 +4,10 @@ from django.db.models import Q, F
 from django.contrib.auth.decorators import login_required
 from purchases.models import Purchase, DownloadToken
 from projects.models import Project
-from django.http import HttpResponse, HttpResponseForbidden
+from django.http import HttpResponseForbidden, FileResponse
 from django.utils import timezone
 from purchases.utils import cleanup_expired_tokens
+from purchases.gdrive import get_binary_download_url, download_file_bytes
 
 # Create your views here.
 
@@ -122,7 +123,7 @@ def download_project(request, slug):
     )
 
     if recent_tokens.exists():
-        return HttpResponseForbidden("Please wait before requesting another download.")
+        return HttpResponseForbidden("Please wait 10 minutes before requesting another download.")
 
 
     token = DownloadToken.objects.create(
@@ -141,14 +142,20 @@ def download_with_token(request, token):
 
     if not token_obj.is_valid():
         return HttpResponseForbidden("Token expired or already used.")
+    
+    try:
+        filename, mimetype, fh = download_file_bytes(token_obj.project.cloud_file_id)
+    except Exception as e:
+        return HttpResponseForbidden(
+            f"Drive fetch failed: {type(e).__name__} — {e}"
+        )
 
     token_obj.is_used = True
     token_obj.save(update_fields=['is_used'])
 
-    return HttpResponse(
-        f"✅ Authorized download\n\n"
-        f"Project: {token_obj.project.title}\n"
-        f"Storage: {token_obj.project.get_cloud_storage_type_display()}\n"
-        f"File ID: {token_obj.project.cloud_file_id}\n\n"
-        f"(Cloud delivery comes next)"
+    return FileResponse(
+        fh,
+        as_attachment=True,
+        filename=filename,
+        content_type=mimetype
     )

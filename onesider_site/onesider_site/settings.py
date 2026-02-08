@@ -136,3 +136,5 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
+
+GOOGLE_DRIVE_CREDENTIALS_PATH = BASE_DIR / 'secrets' / 'gdrive_credentials.json'
