@@ -27,7 +27,8 @@ class Purchase(models.Model):
 
     status = models.CharField(
         max_length=10,
-        choices = STATUS_CHOICES
+        choices = STATUS_CHOICES,
+        default='failed'
     )
 
     purchased_at = models.DateTimeField(auto_now_add=True)
@@ -42,7 +43,7 @@ class DownloadToken(models.Model):
     token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
 
     user = models.ForeignKey(
-        'auth.User',
+        settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name='download_tokens'
     )

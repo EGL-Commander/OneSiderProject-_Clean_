@@ -1,0 +1,15 @@
+<h2>Download: {{ project.title }}</h2>
+
+<p><b>Caution:</b></p>
+<ul>
+  <li>This link is short-lived once generated.</li>
+  <li>After proceeding, the download link expires soon.</li>
+  <li>Avoid refreshing or repeatedly requesting downloads.</li>
+</ul>
+
+<form method="post">
+  {% csrf_token %}
+  <button type="submit">Proceed to Download</button>
+</form>
+
+<button type="button" onclick="history.back()">Cancel</button>

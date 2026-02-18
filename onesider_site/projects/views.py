@@ -1,13 +1,14 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from .models import Project, Category, Project
+from .models import Project, Category
 from django.db.models import Q, F
 from django.contrib.auth.decorators import login_required
 from purchases.models import Purchase, DownloadToken
-from projects.models import Project
 from django.http import HttpResponseForbidden, FileResponse
 from django.utils import timezone
 from purchases.utils import cleanup_expired_tokens
-from purchases.gdrive import get_binary_download_url, download_file_bytes
+from purchases.gdrive import download_file_bytes
+from django.views.decorators.http import require_http_methods
+from django.conf import settings
 
 # Create your views here.
 
@@ -102,6 +103,7 @@ def buy_project(request, slug):
     return redirect('project_detail', slug=project.slug)
 
 @login_required
+@require_http_methods(['GET', 'POST'])
 def download_project(request, slug):
     project = get_object_or_404(Project, slug=slug, is_active=True)
 
@@ -114,16 +116,19 @@ def download_project(request, slug):
     if not has_access:
         return HttpResponseForbidden("You have not purchased this project.")
     
+    if request.method == 'GET':
+        return render(request, 'projects/download_warning.html', {'project': project})
+    
     cleanup_expired_tokens()
 
     recent_tokens = DownloadToken.objects.filter(
         user=request.user,
         project=project,
-        created_at__gte=timezone.now() - timezone.timedelta(minutes=10)
+        created_at__gte=timezone.now() - timezone.timedelta(seconds=60)
     )
 
     if recent_tokens.exists():
-        return HttpResponseForbidden("Please wait 10 minutes before requesting another download.")
+        return HttpResponseForbidden("Please wait 60 Seconds before requesting another download.")
 
 
     token = DownloadToken.objects.create(
@@ -146,9 +151,9 @@ def download_with_token(request, token):
     try:
         filename, mimetype, fh = download_file_bytes(token_obj.project.cloud_file_id)
     except Exception as e:
-        return HttpResponseForbidden(
-            f"Drive fetch failed: {type(e).__name__} — {e}"
-        )
+        if settings.DEBUG:
+            return HttpResponseForbidden(f"Drive fetch failed: {type(e).__name__} — {e}")
+        return HttpResponseForbidden('Could not fetch file from Drive. Please try again later.')
 
     token_obj.is_used = True
     token_obj.save(update_fields=['is_used'])
