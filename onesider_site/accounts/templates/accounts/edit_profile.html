@@ -11,44 +11,4 @@
 
 <hr>
 
-<h3>Saved Projects</h3>
-
-{% if saved_projects %}
-    <ul>
-        {% for project in saved_projects %}
-            <li>
-                <a href="{% url 'project_detail' project.slug %}">
-                    {{ project.title }}
-                </a>
-            </li>
-        {% endfor %}
-    </ul>
-{% else %}
-    <p>No saved projects yet.</p>
-{% endif %}
-
-<hr>
-
-<h3>Purchased Projects</h3>
-
-{% if purchased_projects %}
-    <ul>
-        {% for project in purchased_projects %}
-            <li>
-                {% if project.slug %}
-                    <a href="{% url 'project_detail' project.slug %}">
-                        {{ project.title }}
-                    </a>
-                    —
-                    <a href="{% url 'download_project' project.slug %}">
-                        Download
-                    </a>
-                {% else %}
-                    <span>{{ project.title }} (slug missing)</span>
-                {% endif %}
-            </li>
-        {% endfor %}
-    </ul>
-{% else %}
-    <p>No purchased projects yet.</p>
-{% endif %}
+<p><a href="{% url 'profile' %}">← Back to profile</a></p>
