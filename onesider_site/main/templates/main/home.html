@@ -28,6 +28,17 @@
 
 <hr>
 
+<!-- Latest Projects -->
+ <h2>Latest Projects</h2>
+
+{% for project in latest_projects %}
+    <div>
+        <a href="{% url 'project_detail' project.slug %}">
+            {{ project.title }}
+        </a>
+    </div>
+{% endfor %}
+
 <!-- Random Picks -->
 <h2>Random Picks</h2>
 <ul>
