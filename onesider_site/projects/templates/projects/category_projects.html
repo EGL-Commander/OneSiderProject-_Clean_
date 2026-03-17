@@ -1,3 +1,9 @@
+{% extends 'base.html' %}
+
+{% block title %}Projects in {{ category.name }} - OneSider {% endblock %}
+
+{% block content %}
+
 <h1> {{ category.name }} </h1>
 
 {% if category.description %}
@@ -39,3 +45,5 @@
 {% else %}
     <p>No Projects Found in this Category.</p>
 {% endif %}
+
+{% endblock %}

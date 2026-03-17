@@ -1,3 +1,9 @@
+{% extends 'base.html' %}
+
+{% block title %}Login - OneSider {% endblock %}
+
+{% block content %}
+
 <h2>Login</h2>
 
 {% if form.errors %}
@@ -12,3 +18,5 @@
         <input type="hidden" name="next" value="{{ next }}">
     {% endif %}
 </form>
+
+{% endblock %}

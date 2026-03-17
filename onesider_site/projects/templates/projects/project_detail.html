@@ -1,3 +1,9 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ project.title }} - OneSider {% endblock %}
+
+{% block content %}
+
 <h1> {{ project.title }} </h1>
 
 {% if project.thumbnail %}
@@ -49,3 +55,5 @@
 {% else %}
     <p><a href="{% url 'login' %}?next={{ request.path }}">Login</a> to purchase.</p>
 {% endif %}
+
+{% endblock %}

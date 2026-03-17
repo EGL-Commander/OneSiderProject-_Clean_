@@ -1,3 +1,9 @@
+{% extends 'base.html' %}
+
+{% block title %} Edit Profile - OneSider {% endblock %}
+
+{% block content %}
+
 <h2>Edit Profile</h2>
 
 <form method="POST" enctype="multipart/form-data">
@@ -12,3 +18,5 @@
 <hr>
 
 <p><a href="{% url 'profile' %}">← Back to profile</a></p>
+
+{% endblock %}

@@ -1,3 +1,9 @@
+{% extends 'base.html' %}
+
+{% block title %}Profile - OneSider{% endblock %}
+
+{% block content %}
+
 <h2>Profile</h2>
 
 <p><b>Username:</b> {{ request.user.username }}</p>
@@ -37,3 +43,5 @@
 {% else %}
   <p>No purchased projects yet.</p>
 {% endif %}
+
+{% endblock %}

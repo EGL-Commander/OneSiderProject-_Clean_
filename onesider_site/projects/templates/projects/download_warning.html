@@ -1,3 +1,9 @@
+{% extends 'base.html' %}
+
+{% block title %}Download Warning - {{ project.title }} - OneSider {% endblock %}
+
+{% block content %}
+
 <h2>Download: {{ project.title }}</h2>
 
 <p><b>Caution:</b></p>
@@ -13,3 +19,5 @@
 </form>
 
 <button type="button" onclick="history.back()">Cancel</button>
+
+{% endblock %}
