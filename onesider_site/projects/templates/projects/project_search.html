@@ -3,12 +3,6 @@
 
 {% block content %}
 <h1>Search</h1>
-
-<form method="get" action="{% url 'project_search' %}">
-    <input type="text" name="q" placeholder="Search projects..." value="{{ q }}">
-    <button type="submit">Search</button>
-</form>
-
 <hr>
 
 {% if q %}

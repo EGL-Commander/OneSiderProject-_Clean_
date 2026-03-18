@@ -29,6 +29,14 @@
 
 				<a href="{% url 'project_list' %}">Projects</a>
 
+				<form method='get' action="{% url 'project_search' %}">
+
+					<input type="text" name="q" placeholder="Search...">
+
+					<button type="submit">Search</button>
+
+				</form>
+
 				{% if user.is_authenticated %}
 					
 					<a href="{% url 'profile' %}">Profile</a>
