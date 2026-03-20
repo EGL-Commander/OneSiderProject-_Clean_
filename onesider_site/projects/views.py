@@ -54,6 +54,12 @@ def category_projects(request, category_slug):
 def project_search(request):
     q = request.GET.get('q', '').strip()
 
+    categories = Category.objects.all()
+
+    category = request.GET.get('category')
+    min_price = request.GET.get('min_price')
+    max_price = request.GET.get('max_price')
+
     projects = Project.objects.filter(is_active=True)
 
     if q:
@@ -64,8 +70,22 @@ def project_search(request):
             Q(tags__name__icontains=q) |
             Q(categories__name__icontains=q)
         ).distinct()
+    
+    if category:
+        projects = projects.filter(categories__slug=category)
 
-    return render(request, 'projects/project_search.html', {'projects': projects, 'q': q})
+    if min_price:
+        projects = projects.filter(price__gte=min_price)
+
+    if max_price:
+        projects = projects.filter(price__lte=max_price)
+
+    return render(request, 'projects/project_search.html', {
+        'projects': projects,
+        'q' : q,
+        'selected_category' : category,
+        'categories' : categories,
+        })
 
 @login_required
 def toggle_save(request, slug):
