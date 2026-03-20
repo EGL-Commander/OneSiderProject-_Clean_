@@ -19,7 +19,17 @@ def project_list(request):
 def project_detail(request, slug):
     project = get_object_or_404(Project, slug=slug, is_active=True)
 
-    Project.objects.filter(pk=project.pk).update(views_count=F('views_count') + 1)
+    viewed_projects = request.session.get('viewed_projects', [])
+
+    if project.pk not in viewed_projects:
+        Project.objects.filter(pk=project.pk).update(
+            views_count=F('views_count') + 1
+        )
+
+        viewed_projects.append(project.pk)
+
+        request.session['viewed_projects'] = viewed_projects
+    
     project.refresh_from_db(fields=['views_count', 'purchases_count', 'saves_count'])
 
     has_purchased = False
@@ -33,7 +43,7 @@ def project_detail(request, slug):
     return render(request, 'projects/project_detail.html', {
         'project': project,
         'has_purchased': has_purchased
-        })
+    })
 
 def category_projects(request, category_slug):
     category = get_object_or_404(Category, slug = category_slug)
