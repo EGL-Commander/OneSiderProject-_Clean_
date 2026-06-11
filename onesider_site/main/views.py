@@ -16,4 +16,4 @@ def home(request):
 		'latest_projects': latest_projects,
 	}
 
-	return render(request, 'main/home.html', context)
+	return render(request, 'main/Home (Latest).html', context)

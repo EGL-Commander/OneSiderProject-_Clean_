@@ -1,23 +1,124 @@
 {% extends 'base.html' %}
 
-{% block title %}Download Warning - {{ project.title }} - OneSider {% endblock %}
+{% block title %}Download Warning - {{ project.title }} - OneSider{% endblock %}
+
+{% block styles %}
+<style>
+
+    .btn-cancel {
+        position: relative;
+        overflow: hidden;
+
+        border: 1px solid var(--border);
+        border-radius: 8px;
+
+        color: var(--text-main);
+        background: transparent;
+
+        transition:
+            color 0.3s ease,
+            border-color 0.3s ease,
+            background 0.3s ease,
+            box-shadow 0.3s ease,
+            transform 0.15s ease;
+    }
+
+    .btn-cancel::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+
+        background: linear-gradient(
+            90deg,
+            transparent,
+            rgba(180, 40, 40, 0.08),
+            transparent
+        );
+
+        transform: translateX(-100%);
+        transition: transform 0.5s ease;
+    }
+
+    .btn-cancel:hover {
+        color: #ffb3b3;
+        border-color: rgba(180, 40, 40, 0.7);
+        background: rgba(180, 40, 40, 0.06);
+
+        box-shadow:
+            0 0 12px rgba(180, 40, 40, 0.15);
+    }
+
+    .btn-cancel:hover::before {
+        transform: translateX(100%);
+    }
+
+    .btn-cancel:active {
+        transform: scale(0.97);
+
+        background: rgba(180, 40, 40, 0.12);
+
+        box-shadow:
+            0 0 18px rgba(180, 40, 40, 0.25);
+    }
+
+</style>
+{% endblock %}
 
 {% block content %}
 
-<h2>Download: {{ project.title }}</h2>
+<section class="min-h-screen flex items-center justify-center px-6 pt-32 pb-20">
 
-<p><b>Caution:</b></p>
-<ul>
-  <li>This link is short-lived once generated.</li>
-  <li>After proceeding, the download link expires soon.</li>
-  <li>Avoid refreshing or repeatedly requesting downloads.</li>
-</ul>
+    <div class="card-container max-w-xl w-full p-8 md:p-10 animate-subtle">
 
-<form method="post">
-  {% csrf_token %}
-  <button type="submit">Proceed to Download</button>
-</form>
+        <h1 class="text-2xl tracking-widest uppercase mb-6"
+            style="color: var(--text-bright);">
+            Download Warning
+        </h1>
 
-<button type="button" onclick="history.back()">Cancel</button>
+        <p class="mb-8 text-sm leading-relaxed">
+            You are about to download:
+            <span style="color: var(--text-bright);">
+                {{ project.title }}
+            </span>
+        </p>
+
+        <div class="mb-8">
+
+            <p class="uppercase text-xs tracking-widest mb-4"
+               style="color: var(--accent);">
+                Caution
+            </p>
+
+            <ul class="space-y-3 text-sm">
+                <li>• This link is short-lived once generated.</li>
+                <li>• After proceeding, the download link expires soon.</li>
+                <li>• Avoid refreshing or repeatedly requesting downloads.</li>
+            </ul>
+
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-4">
+
+            <form method="post" class="flex-1">
+                {% csrf_token %}
+
+                <button type="submit"
+                        class="btn-premium w-full py-3 text-xs tracking-widest uppercase">
+                    Proceed to Download
+                </button>
+
+            </form>
+
+            <button type="button"
+                    onclick="history.back()"
+                    class="btn-cancel flex-1 py-3 text-xs tracking-widest uppercase">
+                Cancel
+            </button>
+
+        </div>
+
+    </div>
+
+</section>
 
 {% endblock %}

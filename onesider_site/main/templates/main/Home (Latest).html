@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+
+{% block title %}Home — OneSider{% endblock %}
+
+{% block content %}
+
+    <!-- ── HERO ── -->
+    <section class="min-h-[70vh] flex flex-col items-center justify-center text-center px-6 pt-20">
+
+        <h1 class="text-4xl sm:text-6xl md:text-8xl font-light tracking-[0.15em] mb-6 animate-subtle"
+            style="color: var(--text-bright);"> ONESIDER </h1>
+
+        <p class="max-w-lg text-sm md:text-base font-light tracking-wide mb-10 animate-subtle"
+            style="color: var(--text-main); animation-delay: 0.1s;">
+            A quiet repository of high-fidelity digital assets and modular logic for modern architects.
+            Built in Silence. Engineered for those Who Move Alone.
+        </p>
+
+        <div class="animate-subtle" style="animation-delay: 0.2s;">
+
+            <a href="{% url 'project_list' %}" class="btn-premium px-10 py-3.5 text-xs tracking-[0.2em] uppercase font-semibold inline-block">
+                Explore Collection
+            </a>
+
+            <p class="text-[11px] mt-6 tracking-widest uppercase" style="color: var(--border);"> Scroll to explore </p>
+
+        </div>
+
+    </section>
+
+    <!-- ── TRAYS ── -->
+    <section class="py-20 border-t border-[var(--border)]">
+        <div class="max-w-7xl mx-auto px-8">
+
+            <div class="flex items-center gap-6 mb-12">
+                <h2 class="text-xs uppercase tracking-[0.3em] font-medium" style="color: var(--text-bright);">Selected Works</h2>
+                <div class="h-[1px] flex-1" style="background: var(--border);"></div>
+            </div>
+
+            <div class="space-y-16">
+
+                <!-- Tray 1 — Most Purchased -->
+                <div class="space-y-6">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-xs uppercase tracking-[0.3em]" style="color: var(--text-bright);">Most Purchased</h2>
+                        <a href="{% url 'project_list' %}?sort=most_purchased" class="text-xs tracking-widest transition"
+                            style="color: var(--text-main);"
+                            onmouseover="this.style.color='var(--text-bright)'"
+                            onmouseout="this.style.color='var(--text-main)'">View All →</a>
+                    </div>
+                    <div class="relative overflow-visible group">
+                        <button onclick="scrollTray(this, -1)"
+                            class="tray-arrow absolute left-2 top-1/2 -translate-y-1/2 z-10 w-10 h-10 flex items-center
+                            justify-center rounded-full opacity-0 group-hover:opacity-100 translate-x-[-6px]
+                            group-hover:translate-x-0 transition-all duration-300"> ◀ </button>
+                        <button onclick="scrollTray(this, 1)"
+                            class="tray-arrow absolute right-2 top-1/2 -translate-y-1/2 z-10 w-10 h-10 flex items-center
+                            justify-center rounded-full opacity-0 group-hover:opacity-100 translate-x-[6px]
+                            group-hover:translate-x-0 transition-all duration-300"> ▶ </button>
+                        <div class="flex gap-6 overflow-x-auto overflow-y-visible no-scrollbar tray-scroll pt-4 px-4" id="tray-most-purchased">
+                            <!-- Rendered by JS below -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tray 2 — Newly Added -->
+                <div class="space-y-6">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-xs uppercase tracking-[0.3em]" style="color: var(--text-bright);">Newly Added</h2>
+                        <a href="{% url 'project_list' %}?sort=newest" class="text-xs tracking-widest transition"
+                            style="color: var(--text-main);"
+                            onmouseover="this.style.color='var(--text-bright)'"
+                            onmouseout="this.style.color='var(--text-main)'">View All →</a>
+                    </div>
+                    <div class="relative overflow-visible group">
+                        <button onclick="scrollTray(this, -1)"
+                            class="tray-arrow absolute left-2 top-1/2 -translate-y-1/2 z-10 w-10 h-10 flex items-center
+                            justify-center rounded-full opacity-0 group-hover:opacity-100 translate-x-[-6px]
+                            group-hover:translate-x-0 transition-all duration-300"> ◀ </button>
+                        <button onclick="scrollTray(this, 1)"
+                            class="tray-arrow absolute right-2 top-1/2 -translate-y-1/2 z-10 w-10 h-10 flex items-center
+                            justify-center rounded-full opacity-0 group-hover:opacity-100 translate-x-[6px]
+                            group-hover:translate-x-0 transition-all duration-300"> ▶ </button>
+                        <div class="flex gap-6 overflow-x-auto overflow-y-visible no-scrollbar tray-scroll pt-4 px-4" id="tray-newly-added">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tray 3 — Commander's Choice -->
+                <div class="space-y-6">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-xs uppercase tracking-[0.3em]" style="color: var(--text-bright);">Commander's Choice</h2>
+                        <a href="{% url 'project_list' %}?sort=featured" class="text-xs tracking-widest transition"
+                            style="color: var(--text-main);"
+                            onmouseover="this.style.color='var(--text-bright)'"
+                            onmouseout="this.style.color='var(--text-main)'">View All →</a>
+                    </div>
+                    <div class="relative overflow-visible group">
+                        <button onclick="scrollTray(this, -1)"
+                            class="tray-arrow absolute left-2 top-1/2 -translate-y-1/2 z-10 w-10 h-10 flex items-center
+                            justify-center rounded-full opacity-0 group-hover:opacity-100 translate-x-[-6px]
+                            group-hover:translate-x-0 transition-all duration-300"> ◀ </button>
+                        <button onclick="scrollTray(this, 1)"
+                            class="tray-arrow absolute right-2 top-1/2 -translate-y-1/2 z-10 w-10 h-10 flex items-center
+                            justify-center rounded-full opacity-0 group-hover:opacity-100 translate-x-[6px]
+                            group-hover:translate-x-0 transition-all duration-300"> ▶ </button>
+                        <div class="flex gap-6 overflow-x-auto overflow-y-visible no-scrollbar tray-scroll pt-4 px-4" id="tray-commanders-choice">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tray 4 — Rising -->
+                <div class="space-y-6">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-xs uppercase tracking-[0.3em]" style="color: var(--text-bright);">Rising</h2>
+                        <a href="{% url 'project_list' %}?sort=rising" class="text-xs tracking-widest transition"
+                            style="color: var(--text-main);"
+                            onmouseover="this.style.color='var(--text-bright)'"
+                            onmouseout="this.style.color='var(--text-main)'">View All →</a>
+                    </div>
+                    <div class="relative overflow-visible group">
+                        <button onclick="scrollTray(this, -1)"
+                            class="tray-arrow absolute left-2 top-1/2 -translate-y-1/2 z-10 w-10 h-10 flex items-center
+                            justify-center rounded-full opacity-0 group-hover:opacity-100 translate-x-[-6px]
+                            group-hover:translate-x-0 transition-all duration-300"> ◀ </button>
+                        <button onclick="scrollTray(this, 1)"
+                            class="tray-arrow absolute right-2 top-1/2 -translate-y-1/2 z-10 w-10 h-10 flex items-center
+                            justify-center rounded-full opacity-0 group-hover:opacity-100 translate-x-[6px]
+                            group-hover:translate-x-0 transition-all duration-300"> ▶ </button>
+                        <div class="flex gap-6 overflow-x-auto overflow-y-visible no-scrollbar tray-scroll pt-4 px-4" id="tray-rising">
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+
+    // ── REAL DATA FROM DJANGO ─────────────────────────────────────
+    // tray_data is a JSON object passed from the home() view in main/views.py.
+    // Shape: { "tray-most-purchased": [...], "tray-newly-added": [...], ... }
+    // Each project: { title, price, slug, thumbnail_url, short_description }
+    const trayData = {{ tray_data|safe }};
+
+    // ── TRAY CARD TEMPLATE ────────────────────────────────────────
+    function createTrayCard(item) {
+        const imgTag = item.thumbnail_url
+            ? `<img loading="lazy" src="${item.thumbnail_url}" alt="${item.title}"
+                  class="w-full h-full object-cover opacity-0 transition-opacity duration-500">`
+            : `<div class="w-full h-full flex items-center justify-center text-xs tracking-widest uppercase"
+                  style="color: var(--border);">No Image</div>`;
+
+        return `
+            <a href="/gallery/${item.slug}/"
+                class="min-w-[200px] sm:min-w-[240px] md:min-w-[260px] card-container block cursor-pointer animate-subtle">
+                <div class="aspect-[16/10] card-image-wrap" style="background: var(--bg-deep);">
+                    ${imgTag}
+                </div>
+                <div class="p-4">
+                    <h3 class="text-sm font-medium mb-1" style="color: var(--text-bright);">${item.title}</h3>
+                    <p class="text-xs mb-1" style="color: var(--text-main);">${item.short_description || ''}</p>
+                    <p class="text-xs" style="color: var(--text-main);">₹${item.price}</p>
+                </div>
+            </a>
+        `;
+    }
+
+    // ── RENDER ALL TRAYS ──────────────────────────────────────────
+    Object.entries(trayData).forEach(([id, items]) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+
+        if (!items || items.length === 0) {
+            el.innerHTML = `<p class="text-xs tracking-widest uppercase px-4" style="color: var(--border);">Nothing here yet.</p>`;
+            return;
+        }
+
+        el.innerHTML = items.map(createTrayCard).join('');
+        applyImageFadeIn(el);
+    });
+
+</script>
+{% endblock %}

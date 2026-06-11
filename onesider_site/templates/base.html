@@ -1,73 +1,799 @@
-{% load static %}
+<!-- code 2 -->
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
+<head>
 
-	<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-		<meta charset="UTF-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}OneSider{% endblock %} | Digital Gallery</title>
 
-		<title>{% block title %} OneSider {% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 
-		{% block head %}
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400&family=Exo+2:wght@300;500;600&display=swap" rel="stylesheet">
 
-		<!-- <link rel="stylesheet" href="{% static 'css/base.css' %}"> -->
+    <style>
 
-		{% endblock %}
+        :root {
+            --bg-deep: #050505;
+            --bg-soft: #0a0a0a;
+            --accent: #8a2be2;
+            --accent-rgb: 138, 43, 226;
+            --border: #1a1a1a;
+            --text-main: #a3a3a3;
+            --text-bright: #ffffff;
+            --nav-height: 64px;
+            --filters-height: 56px;
+            --scroll-offset: calc(var(--nav-height) + var(--filters-height));
+            --backdrop-overlay: rgba(0, 0, 0, 0.6);
+        }
 
-		<script src="https://cdn.tailwindcss.com"></script>
+        [data-theme="light"] {
+            --bg-deep: #f4f3f1;
+            --bg-soft: #eceae8;
+            --accent: #6a1fc2;
+            --accent-rgb: 106, 31, 194;
+            --border: #d8d5d0;
+            --text-main: #5a5652;
+            --text-bright: #111111;
+            --backdrop-overlay: rgba(100, 90, 80, 0.4);
+        }
 
-	</head>
+        html { scroll-behavior: smooth; }
 
-	<body>
+        body {
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            font-family: 'Montserrat', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+            transition: background-color 0.4s ease, color 0.4s ease;
+        }
 
-		<header>
+        h1, h2, h3, h4, button, .nav-link, .price {
+            font-family: 'Exo 2', sans-serif;
+        }
 
-			<h1>Welcome To OneSider</h1>
+        nav { box-shadow: 0 1px 0 rgba(255,255,255,0.03); }
+        [data-theme="light"] nav { box-shadow: 0 1px 0 rgba(0,0,0,0.06); }
 
-			<nav>
+        /* Search Bar */
+        .search-input {
+            border-bottom: 1px solid var(--border);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            width: 70px;
+            outline: none;
+            color: var(--text-bright);
+        }
+        .search-input::placeholder { color: var(--text-main); }
+        .search-input:focus { border-bottom-color: var(--accent); }
 
-				<a href="{% url 'home' %}">Home</a>
+        @media (min-width: 768px) {
+            :root { --nav-height: 80px; }
+            .search-input { width: 120px; }
+            .search-input:focus { width: 220px; border-bottom-color: var(--accent); outline: none; }
+        }
 
-				<a href="{% url 'project_list' %}">Projects</a>
+        /* Inputs */
+        .input-premium {
+            border-bottom: 1px solid var(--border);
+            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            outline: none;
+            position: relative;
+            color: var(--text-bright);
+        }
+        .input-premium::placeholder { color: var(--text-main); }
+        .input-premium:focus { border-bottom-color: var(--accent); }
+        .input-premium:focus::placeholder { opacity: 0.4; transition: opacity 0.3s ease; }
 
-				<form method='get' action="{% url 'project_search' %}">
+        /* Buttons */
+        .btn-premium {
+            border: 1px solid var(--accent);
+            border-radius: 8px;
+            background: transparent;
+            color: var(--text-bright);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            transform: translateZ(0);
+        }
+        .btn-premium:hover {
+            background: rgba(var(--accent-rgb), 0.1);
+            box-shadow: 0 0 15px rgba(var(--accent-rgb), 0.2);
+        }
 
-					<input type="text" name="q" placeholder="Search...">
+        /* Cards */
+        .card-container {
+            overflow: hidden;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--bg-soft);
+            transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease, background-color 0.4s ease;
+        }
+        .card-container:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5), 0 0 10px rgba(var(--accent-rgb), 0.1);
+            border-color: #333;
+        }
+        [data-theme="light"] .card-container:hover {
+            box-shadow: 0 10px 30px rgba(0,0,0,0.12), 0 0 10px rgba(var(--accent-rgb), 0.1);
+            border-color: #b8b4ae;
+        }
+        .card-image-wrap {
+            overflow: hidden;
+            border-bottom: 1px solid var(--border);
+        }
+        .card-image-wrap img {
+            transition: transform 0.6s ease, filter 0.6s ease, opacity 0.6s ease;
+            filter: grayscale(100%);
+            opacity: 0.4;
+        }
+        .card-container:hover img {
+            transform: scale(1.05);
+            filter: grayscale(0%);
+            opacity: 1;
+        }
+        [data-theme="light"] .card-image-wrap img { opacity: 0.55; }
+        .card-container:active { transform: translateY(-4px) scale(0.97); }
 
-					<button type="submit">Search</button>
+        /* Scrollbar */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-				</form>
+        /* Filter Buttons */
+        .filter-btn {
+            position: relative;
+            color: var(--text-main);
+            font-size: 11px;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            opacity: 0.4;
+            transform: scale(1);
+            transition: 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .filter-btn::after {
+            content: "";
+            position: absolute;
+            left: 50%;
+            bottom: -6px;
+            width: 0%;
+            height: 1px;
+            background: var(--accent);
+            transform: translateX(-50%);
+            transition: width 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+            opacity: 0.8;
+        }
+        .filter-btn:hover { opacity: 0.8; }
+        .filter-btn.active {
+            opacity: 1;
+            color: var(--text-bright);
+            transform: scale(1.05);
+            text-shadow: 0 0 8px rgba(var(--accent-rgb), 0.4);
+        }
+        .filter-btn.active::after { width: 100%; }
 
-				{% if user.is_authenticated %}
-					
-					<a href="{% url 'profile' %}">Profile</a>
+        /* Animations */
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .animate-subtle { animation: slideUp 0.6s ease-out; }
 
-					<a href="{% url 'logout' %}">Logout</a>
+        /* Skeleton */
+        .skeleton {
+            position: relative;
+            overflow: hidden;
+            background: var(--bg-soft);
+        }
+        .skeleton::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            transform: translateX(-100%);
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+            animation: shimmer 1.2s infinite;
+        }
+        [data-theme="light"] .skeleton::after {
+            background: linear-gradient(90deg, transparent, rgba(0,0,0,0.04), transparent);
+        }
+        @keyframes shimmer { 100% { transform: translateX(100%); } }
 
-				{% else %}
-				
-					<a href="{% url 'login' %}">Login</a>
-				
-				{% endif %}
+        footer a:hover {
+            color: var(--text-bright);
+            text-shadow: 0 0 8px rgba(var(--accent-rgb), 0.4);
+        }
 
-			</nav>
-			
-		</header>
+        /* Tray */
+        .tray-scroll {
+            scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
+        }
+        .tray-scroll > * { scroll-snap-align: start; }
 
-		<main>
+        /* Chips */
+        .price-chip {
+            border: 1px solid var(--border);
+            padding: 4px 10px;
+            border-radius: 999px;
+            opacity: 0.5;
+            transition: 0.3s;
+            color: var(--text-main);
+        }
+        .price-chip.active { opacity: 1; border-color: var(--accent); color: var(--text-bright); }
 
-			{% block content %}{% endblock %}
+        .adv-chip {
+            border: 1px solid var(--border);
+            padding: 6px 12px;
+            border-radius: 999px;
+            opacity: 0.5;
+            transition: 0.3s;
+            color: var(--text-main);
+        }
+        .adv-chip.active { opacity: 1; border-color: var(--accent); color: var(--text-bright); }
 
-		</main>
+        /* Hamburger */
+        .menu-line {
+            position: absolute;
+            width: 20px;
+            height: 2px;
+            background: var(--text-bright);
+            transition: all 0.3s ease;
+        }
+        .menu-line.top    { transform: translateY(-6px); }
+        .menu-line.middle { opacity: 1; }
+        .menu-line.bottom { transform: translateY(6px); }
+        #menu-btn:hover .menu-line {
+            background: var(--accent);
+            box-shadow: 0 0 8px rgba(var(--accent-rgb), 0.6);
+        }
+        #menu-btn.active .top    { transform: translateY(0) rotate(45deg); }
+        #menu-btn.active .middle { opacity: 0; }
+        #menu-btn.active .bottom { transform: translateY(0) rotate(-45deg); }
 
-		<footer>
+        /* Mobile menu stagger */
+        #mobile-menu > * {
+            transform: translateY(12px) scale(0.96);
+            opacity: 0;
+            filter: blur(4px);
+            transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s ease, filter 0.3s ease;
+        }
+        #mobile-menu.open > * { transform: translateY(0) scale(1); opacity: 1; filter: blur(0); }
+        #mobile-menu.open > *:nth-child(1) { transition-delay: 0.05s; }
+        #mobile-menu.open > *:nth-child(2) { transition-delay: 0.1s; }
+        #mobile-menu.open > *:nth-child(3) { transition-delay: 0.15s; }
+        #mobile-menu.open > *:nth-child(4) { transition-delay: 0.2s; }
+        #mobile-menu.open > *:nth-child(5) { transition-delay: 0.25s; }
+        #mobile-menu.closing > * { transform: translateY(10px) scale(0.96); opacity: 0; filter: blur(3px); }
+        #mobile-menu.closing > *:nth-child(1) { transition-delay: 0.2s; }
+        #mobile-menu.closing > *:nth-child(2) { transition-delay: 0.15s; }
+        #mobile-menu.closing > *:nth-child(3) { transition-delay: 0.1s; }
+        #mobile-menu.closing > *:nth-child(4) { transition-delay: 0.05s; }
+        #mobile-menu.closing > *:nth-child(5) { transition-delay: 0s; }
 
-			<hr>
-			<p>EGLCommander&copy; 2025 OneSider. All rights reserved.</p>
+        #menu-backdrop { transition: opacity 0.3s ease; }
 
-		</footer>
+        /* Tray arrows */
+        .tray-arrow {
+            color: var(--text-bright);
+            transition: background 0.2s ease, transform 0.15s ease;
+        }
+        .tray-arrow:hover { background: rgba(var(--accent-rgb), 0.08); }
+        .tray-arrow:active { transform: translateY(-50%) scale(0.88); background: rgba(var(--accent-rgb), 0.15); }
 
-	</body>
+        /* Theme toggle */
+        .theme-toggle {
+            width: 40px;
+            height: 22px;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            background: transparent;
+            position: relative;
+            cursor: pointer;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+            flex-shrink: 0;
+        }
+        .theme-toggle:hover {
+            border-color: var(--accent);
+            box-shadow: 0 0 8px rgba(var(--accent-rgb), 0.2);
+        }
+        .theme-toggle-knob {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--text-main);
+            transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), background 0.3s ease;
+        }
+        [data-theme="light"] .theme-toggle-knob { transform: translateX(18px); background: var(--accent); }
 
+        /* Backgrounds */
+        .nav-bg { background: rgba(5, 5, 5, 0.85); transition: background 0.4s ease; }
+        [data-theme="light"] .nav-bg { background: rgba(244, 243, 241, 0.9); }
+
+        .sticky-bg { background: rgba(5, 5, 5, 0.92); transition: background 0.4s ease; }
+        [data-theme="light"] .sticky-bg { background: rgba(244, 243, 241, 0.95); }
+
+        .mobile-menu-bg { background: rgba(0, 0, 0, 0.97); transition: background 0.4s ease; }
+        [data-theme="light"] .mobile-menu-bg { background: rgba(244, 243, 241, 0.98); }
+
+        .search-overlay-bg { background: rgba(5, 5, 5, 0.97); transition: background 0.4s ease; }
+        [data-theme="light"] .search-overlay-bg { background: rgba(244, 243, 241, 0.97); }
+
+        .adv-filter-bg { background: var(--bg-deep); transition: background 0.4s ease; }
+
+        .toast-bg { background: #111; transition: background 0.4s ease, border-color 0.4s ease; }
+        [data-theme="light"] .toast-bg { background: #eeece9; }
+
+        .nav-link-item { color: var(--text-bright); transition: color 0.3s ease, opacity 0.3s ease; }
+
+        .menu-backdrop-overlay {
+            background: var(--backdrop-overlay);
+            transition: opacity 0.3s ease, background 0.4s ease;
+        }
+
+        /* Sticky filters bar — used by gallery page */
+        #sticky-top { position: relative; }
+        #sticky-top::before {
+            content: "";
+            position: absolute;
+            left: -12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 1px;
+            height: 12px;
+            background: var(--border);
+        }
+
+        {# Page-specific overrides can go in the styles block #}
+
+    </style>
+
+    {% block styles %}{% endblock %}
+
+</head>
+<body class="selection:bg-[#8a2be2]/30">
+
+    <!-- ── NAVBAR ── -->
+    <nav class="fixed top-0 w-full z-50 nav-bg backdrop-blur-sm border-b border-[var(--border)] transition-colors duration-400">
+        <div class="max-w-7xl mx-auto px-4 md:px-8 flex items-center justify-between" style="height: var(--nav-height);">
+            <div class="flex items-center gap-12">
+
+                <a href="/" class="nav-link-item text-sm md:text-xl font-medium tracking-widest uppercase">OS</a>
+
+                <div class="hidden md:flex gap-8 text-[13px] tracking-wide nav-link">
+                    <a href="/" class="nav-link-item opacity-50 hover:opacity-100 transition-opacity">Gallery</a>
+                    <a href="/archive/" class="nav-link-item opacity-50 hover:opacity-100 transition-opacity">Archive</a>
+                    <a href="/journal/" class="nav-link-item opacity-50 hover:opacity-100 transition-opacity">Journal</a>
+                </div>
+
+            </div>
+
+            <div class="flex items-center gap-4">
+
+                <button id="search-btn" class="md:hidden nav-link-item text-lg"> 🔍 </button>
+
+                <button class="theme-toggle md:hidden" id="theme-toggle-mobile" aria-label="Toggle theme">
+                    <span class="theme-toggle-knob"></span>
+                </button>
+
+                <button id="menu-btn" class="md:hidden relative w-8 h-8 flex flex-col justify-center items-center group">
+                    <span class="menu-line top"></span>
+                    <span class="menu-line middle"></span>
+                    <span class="menu-line bottom"></span>
+                </button>
+
+                <input type="text" placeholder="Search..." class="hidden md:block search-input bg-transparent text-sm py-1">
+
+                <button class="theme-toggle hidden md:block" id="theme-toggle-desktop" aria-label="Toggle theme">
+                    <span class="theme-toggle-knob"></span>
+                </button>
+
+                <a href="/access/" class="hidden md:block btn-premium px-5 py-2 text-xs tracking-widest font-medium">
+                    ACCESS
+                </a>
+
+            </div>
+        </div>
+    </nav>
+
+    <!-- ── SEARCH OVERLAY ── -->
+    <div id="search-overlay"
+        class="fixed inset-0 search-overlay-bg backdrop-blur-md z-50 opacity-0 pointer-events-none
+        transition-all duration-300 flex items-center justify-center">
+
+        <input type="text" placeholder="Search..."
+            class="w-[80%] max-w-xl bg-transparent border-b border-[var(--border)]
+            text-lg py-3 outline-none focus:border-[var(--accent)] transition"
+            style="color: var(--text-bright);">
+
+    </div>
+
+    <!-- ── MOBILE MENU ── -->
+    <div id="mobile-menu"
+        class="fixed left-0 w-full mobile-menu-bg backdrop-blur-xl border-b border-[var(--border)] shadow-2xl flex flex-col
+        text-sm tracking-widest uppercase z-40 transition-all duration-300 ease-out -translate-y-full opacity-0 pointer-events-none"
+        style="top: var(--nav-height);">
+
+        <a href="/access/"
+            class="m-4 px-6 py-3 text-center border rounded-md nav-link-item active:scale-95 transition-all duration-200"
+            style="border-color: var(--accent);">
+            ACCESS
+        </a>
+
+        <a href="/" class="p-5 transition hover:tracking-wider"
+            style="color: var(--text-main);"
+            onmouseover="this.style.color='var(--text-bright)'"
+            onmouseout="this.style.color='var(--text-main)'">Gallery</a>
+
+        <a href="/archive/" class="p-5 transition hover:tracking-wider"
+            style="color: var(--text-main);"
+            onmouseover="this.style.color='var(--text-bright)'"
+            onmouseout="this.style.color='var(--text-main)'">Archive</a>
+
+        <a href="/journal/" class="p-5 transition hover:tracking-wider"
+            style="color: var(--text-main);"
+            onmouseover="this.style.color='var(--text-bright)'"
+            onmouseout="this.style.color='var(--text-main)'">Journal</a>
+
+        <button id="mobile-filter" onclick="openAdvanced()"
+            class="p-5 transition text-left"
+            style="color: var(--text-main);"
+            onmouseover="this.style.color='var(--text-bright)'"
+            onmouseout="this.style.color='var(--text-main)'">
+            Filters
+        </button>
+
+    </div>
+
+    <!-- ── BACKDROP ── -->
+    <div id="menu-backdrop"
+        class="fixed inset-0 menu-backdrop-overlay backdrop-blur-sm z-30 opacity-0 pointer-events-none">
+    </div>
+
+    <!-- ── PAGE CONTENT ── -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- ── FOOTER ── -->
+    <footer class="border-t mt-32" style="border-color: var(--border);">
+        <div class="max-w-7xl mx-auto px-8 py-16">
+
+            <div class="flex flex-col md:flex-row justify-between gap-12 mb-16">
+
+                <div>
+                    <h2 class="text-xl tracking-widest uppercase mb-4" style="color: var(--text-bright);">OneSider</h2>
+                    <p class="text-sm max-w-xs leading-relaxed" style="color: var(--text-main);">
+                        A silent archive of systems, structures, and digital precision. Built for those who move alone.
+                    </p>
+                </div>
+
+                <div class="flex gap-16 text-sm">
+                    <div class="space-y-3">
+                        <h3 class="text-xs tracking-widest uppercase mb-3" style="color: var(--text-bright);">Explore</h3>
+                        <a href="/" class="block opacity-50 hover:opacity-100 transition" style="color: var(--text-bright);">Gallery</a>
+                        <a href="/archive/" class="block opacity-50 hover:opacity-100 transition" style="color: var(--text-bright);">Archive</a>
+                        <a href="/journal/" class="block opacity-50 hover:opacity-100 transition" style="color: var(--text-bright);">Journal</a>
+                    </div>
+                    <div class="space-y-3">
+                        <h3 class="text-xs tracking-widest uppercase mb-3" style="color: var(--text-bright);">System</h3>
+                        <a href="/access/" class="block opacity-50 hover:opacity-100 transition" style="color: var(--text-bright);">Access</a>
+                        <a href="/terms/" class="block opacity-50 hover:opacity-100 transition" style="color: var(--text-bright);">Terms</a>
+                        <a href="/privacy/" class="block opacity-50 hover:opacity-100 transition" style="color: var(--text-bright);">Privacy</a>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="h-[1px] w-full mb-6" style="background: var(--border);"></div>
+
+            <div class="flex flex-col md:flex-row justify-between items-center text-xs tracking-widest uppercase gap-4" style="color: var(--text-main);">
+                <p>© 2026 OneSider</p>
+                <p class="text-center opacity-40"> Built in silence. Designed for control. </p>
+                <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})"N
+                    class="transition"
+                    onmouseover="this.style.color='var(--text-bright)'"
+                    onmouseout="this.style.color='var(--text-main)'"> ↑ Back to Top </button>
+            </div>
+
+        </div>
+    </footer>
+
+    <!-- ── TOAST ── -->
+    <div id="toast" class="fixed bottom-10 right-10 z-[200] opacity-0 translate-y-4 transition-all duration-500">
+        <div class="toast-bg px-8 py-4 rounded-lg border shadow-2xl flex items-center gap-4"
+            style="border-color: var(--border);">
+            <div class="w-2 h-2 rounded-full" style="background: var(--accent);"></div>
+            <p id="toast-msg" class="text-xs font-medium tracking-widest uppercase" style="color: var(--text-bright);"></p>
+        </div>
+    </div>
+
+    <!-- ── ADVANCED FILTER PAGE (site-wide overlay) ── -->
+    <section id="advanced-filters-page"
+        class="fixed inset-0 adv-filter-bg z-[100] opacity-0 pointer-events-none transition-all duration-500 overflow-y-auto">
+
+        <div class="max-w-5xl mx-auto px-6 py-20">
+
+            <div class="flex justify-between items-center mb-12">
+                <h2 class="text-xl tracking-widest uppercase" style="color: var(--text-bright);">Advanced Filters</h2>
+                <button id="close-advanced"
+                    class="text-sm tracking-widest transition"
+                    style="color: var(--text-main);"
+                    onmouseover="this.style.color='var(--text-bright)'"
+                    onmouseout="this.style.color='var(--text-main)'">
+                    Close ✕
+                </button>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-12">
+                <div>
+                    <p class="text-xs mb-4 uppercase tracking-widest" style="color: var(--text-main);">Category</p>
+                    <div class="flex flex-wrap gap-3">
+                        <button class="adv-chip" data-filter="category" data-value="interface">Interface</button>
+                        <button class="adv-chip" data-filter="category" data-value="framework">Framework</button>
+                        <button class="adv-chip" data-filter="category" data-value="tool">Tool</button>
+                    </div>
+                </div>
+                <div>
+                    <p class="text-xs mb-4 uppercase tracking-widest" style="color: var(--text-main);">Price</p>
+                    <div class="flex gap-4">
+                        <input id="adv-min" type="number" min="0" placeholder="Min" class="input-premium bg-transparent w-full py-1 text-sm">
+                        <input id="adv-max" type="number" placeholder="Max" class="input-premium bg-transparent w-full py-1 text-sm">
+                    </div>
+                </div>
+            </div>
+
+            <p id="live-results" class="mt-4 text-xs tracking-widest" style="color: var(--text-main);">0 Results Match</p>
+
+            <div class="mt-16 flex gap-6">
+                <button id="apply-advanced" class="btn-premium px-10 py-3 text-xs tracking-widest uppercase">Apply Filters</button>
+                <button id="reset-advanced"
+                    class="text-xs uppercase transition"
+                    style="color: var(--text-main);"
+                    onmouseover="this.style.color='var(--text-bright)'"
+                    onmouseout="this.style.color='var(--text-main)'">
+                    Reset
+                </button>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ── SITE-WIDE JS ── -->
+    <script>
+
+        // ── THEME ────────────────────────────────────────────────
+        const html = document.documentElement;
+
+        function getStoredTheme() { return localStorage.getItem("os-theme") || "dark"; }
+
+        function applyTheme(theme) {
+            html.setAttribute("data-theme", theme);
+            localStorage.setItem("os-theme", theme);
+        }
+
+        function toggleTheme() {
+            applyTheme(html.getAttribute("data-theme") === "dark" ? "light" : "dark");
+        }
+
+        applyTheme(getStoredTheme());
+
+        document.getElementById("theme-toggle-desktop").addEventListener("click", toggleTheme);
+        document.getElementById("theme-toggle-mobile").addEventListener("click", toggleTheme);
+        // ──────────────────────────────────────────────────────────
+
+        // ── DEBOUNCE ──────────────────────────────────────────────
+        function debounce(fn, delay = 100) {
+            let t;
+            return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), delay); };
+        }
+        // ──────────────────────────────────────────────────────────
+
+        // ── SCROLL LOCK ───────────────────────────────────────────
+        let scrollLocks = 0;
+
+        function lockScroll() {
+            scrollLocks++;
+            document.body.classList.add("overflow-hidden");
+        }
+
+        function unlockScroll() {
+            scrollLocks = Math.max(0, scrollLocks - 1);
+            if (scrollLocks === 0) document.body.classList.remove("overflow-hidden");
+        }
+
+        window.addEventListener("pageshow", () => {
+            scrollLocks = 0;
+            document.body.classList.remove("overflow-hidden");
+        });
+        // ──────────────────────────────────────────────────────────
+
+        // ── SCROLL OFFSET ─────────────────────────────────────────
+        function getScrollOffset() {
+            const stickyFilters = document.getElementById("sticky-filters");
+            const navHeight = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--nav-height'));
+            const filtersVisible = stickyFilters && !stickyFilters.classList.contains("opacity-0");
+            const filtersHeight = filtersVisible ? stickyFilters.offsetHeight : 0;
+            return navHeight + filtersHeight + 10;
+        }
+        // ──────────────────────────────────────────────────────────
+
+        // ── MOBILE MENU ───────────────────────────────────────────
+        const menuBtn = document.getElementById("menu-btn");
+        const mobileMenu = document.getElementById("mobile-menu");
+        const backdrop = document.getElementById("menu-backdrop");
+
+        menuBtn.addEventListener("click", () => {
+            const isOpen = mobileMenu.classList.contains("open");
+
+            if (isOpen) {
+                mobileMenu.classList.add("closing");
+
+                const onTransitionEnd = () => {
+                    mobileMenu.classList.remove("open", "closing");
+                    mobileMenu.classList.add("-translate-y-full", "opacity-0", "pointer-events-none");
+                    mobileMenu.removeEventListener("transitionend", onTransitionEnd);
+                    backdrop.classList.add("opacity-0", "pointer-events-none");
+                    unlockScroll();
+                };
+
+                mobileMenu.addEventListener("transitionend", onTransitionEnd, { once: true });
+                menuBtn.classList.remove("active");
+
+            } else {
+                mobileMenu.classList.remove("-translate-y-full", "opacity-0", "pointer-events-none");
+                backdrop.classList.remove("opacity-0", "pointer-events-none");
+                lockScroll();
+                setTimeout(() => mobileMenu.classList.add("open"), 10);
+                menuBtn.classList.add("active");
+            }
+        });
+
+        backdrop.addEventListener("click", () => menuBtn.click());
+        // ──────────────────────────────────────────────────────────
+
+        // ── SEARCH OVERLAY ────────────────────────────────────────
+        const searchBtn = document.getElementById("search-btn");
+        const searchOverlay = document.getElementById("search-overlay");
+
+        searchBtn.addEventListener("click", () => {
+            searchOverlay.classList.remove("opacity-0", "pointer-events-none", "overflow-hidden");
+            searchOverlay.querySelector("input").focus();
+        });
+
+        searchOverlay.addEventListener("click", (e) => {
+            if (e.target === searchOverlay)
+                searchOverlay.classList.add("opacity-0", "pointer-events-none", "overflow-hidden");
+        });
+        // ──────────────────────────────────────────────────────────
+
+        // ── TOAST ─────────────────────────────────────────────────
+        let toastTimer = null;
+
+        function toast(msg) {
+            const el = document.getElementById('toast');
+            document.getElementById('toast-msg').innerText = msg;
+            el.classList.remove('opacity-0', 'translate-y-4');
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
+                el.classList.add('opacity-0', 'translate-y-4');
+                toastTimer = null;
+            }, 3000);
+        }
+
+        document.addEventListener("click", (e) => {
+            const btn = e.target.closest("[data-toast]");
+            if (btn && btn.dataset.toast) toast(btn.dataset.toast);
+        });
+        // ──────────────────────────────────────────────────────────
+
+        // ── MAGNETIC BUTTONS (delegated — works for dynamic too) ──
+        document.addEventListener('mousemove', (e) => {
+            const btn = e.target.closest('.btn-premium');
+            if (!btn) return;
+            const rect = btn.getBoundingClientRect();
+            btn.style.transform = `translate(${(e.clientX - rect.left - rect.width / 2) * 0.08}px, ${(e.clientY - rect.top - rect.height / 2) * 0.08}px)`;
+        });
+
+        document.addEventListener('mouseleave', (e) => {
+            const btn = e.target.closest('.btn-premium');
+            if (btn) btn.style.transform = 'translate(0,0)';
+        }, true);
+        // ──────────────────────────────────────────────────────────
+
+        // ── SMOOTH ANCHOR SCROLL ──────────────────────────────────
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener("click", function(e) {
+                const target = document.querySelector(this.getAttribute("href"));
+                if (!target) return;
+                e.preventDefault();
+                window.scrollTo({
+                    top: target.getBoundingClientRect().top + window.scrollY - getScrollOffset(),
+                    behavior: "smooth"
+                });
+            });
+        });
+        // ──────────────────────────────────────────────────────────
+
+        // ── ADVANCED FILTERS OVERLAY ──────────────────────────────
+        const advPage = document.getElementById("advanced-filters-page");
+
+        // openAdvanced / closeAdvanced are called by gallery page too
+        function openAdvanced() {
+            if (typeof draftFilters !== 'undefined') draftFilters = structuredClone(filters);
+            if (typeof syncUIWithFilters === 'function') syncUIWithFilters();
+            advPage.classList.remove("opacity-0", "pointer-events-none");
+            lockScroll();
+        }
+
+        function closeAdvanced() {
+            advPage.classList.add("opacity-0", "pointer-events-none");
+            unlockScroll();
+        }
+
+        document.getElementById("close-advanced").onclick = closeAdvanced;
+
+        // adv chip clicks — gallery page adds its own filter logic on top
+        document.querySelectorAll(".adv-chip").forEach(chip => {
+            chip.addEventListener("click", () => {
+                chip.classList.toggle("active");
+                if (typeof syncDraftFilters === 'function') syncDraftFilters();
+            });
+        });
+
+        ["adv-min", "adv-max"].forEach(id => {
+            document.getElementById(id).addEventListener("input", debounce(() => {
+                if (typeof syncDraftFilters === 'function') syncDraftFilters();
+            }, 120));
+        });
+
+        document.getElementById("apply-advanced").onclick = () => {
+            if (typeof applyAdvancedFilters === 'function') {
+                applyAdvancedFilters();
+            } else {
+                closeAdvanced();
+            }
+        };
+
+        document.getElementById("reset-advanced").onclick = () => {
+            if (typeof resetFilters === 'function') {
+                resetFilters();
+                if (typeof draftFilters !== 'undefined') draftFilters = structuredClone(filters);
+                if (typeof updateLiveResults === 'function') updateLiveResults(draftFilters);
+            }
+        };
+
+        // ── ESCAPE KEY ────────────────────────────────────────────
+        document.addEventListener("keydown", (e) => {
+            if (e.key !== "Escape") return;
+            searchOverlay.classList.add("opacity-0", "pointer-events-none");
+            if (mobileMenu.classList.contains("open")) menuBtn.click();
+            if (!advPage.classList.contains("opacity-0")) closeAdvanced();
+        });
+        // ──────────────────────────────────────────────────────────
+
+        // ── IMAGE FADE IN ─────────────────────────────────────────
+        function applyImageFadeIn(root = document) {
+            root.querySelectorAll("img").forEach(img => {
+                if (img.complete) img.classList.remove("opacity-0");
+                else img.onload = () => img.classList.remove("opacity-0");
+            });
+        }
+        applyImageFadeIn();
+        // ──────────────────────────────────────────────────────────
+
+        // ── TRAY SCROLL ───────────────────────────────────────────
+        function scrollTray(btn, dir) {
+            const tray = btn.parentElement.querySelector(".tray-scroll");
+            tray.scrollBy({ left: dir * 240, behavior: "smooth" });
+        }
+        // ──────────────────────────────────────────────────────────
+
+    </script>
+
+    {% block scripts %}{% endblock %}
+
+</body>
 </html>

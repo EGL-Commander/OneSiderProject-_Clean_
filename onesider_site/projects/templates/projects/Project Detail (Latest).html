@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ project.title }} — OneSider{% endblock %}
+
+{% block content %}
+
+    <section class="min-h-screen pt-32 pb-20 px-6" id="project_detail">
+        <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16">
+
+            <!-- Large Thumbnail -->
+            <div class="border rounded-xl overflow-hidden h-[400px] md:h-[560px] lg:h-auto"
+                style="background: var(--bg-soft); border-color: var(--border);">
+
+                {% if project.thumbnail %}
+                    <img id="project-hero-img"
+                        src="{{ project.thumbnail.url }}"
+                        alt="{{ project.title }}"
+                        class="w-full h-full object-cover opacity-0 transition-opacity duration-700">
+                {% else %}
+                    <div class="w-full h-full flex items-center justify-center text-xs tracking-widest uppercase"
+                        style="color: var(--border);">No Image</div>
+                {% endif %}
+
+            </div>
+
+            <!-- Info -->
+            <div class="flex flex-col justify-between">
+                <div>
+
+                    <!-- Category/Type -->
+                    <p class="text-xs tracking-[0.3em] uppercase mb-3" style="color: var(--text-main);">
+                        {% for cat in project.categories.all %}
+                            {{ cat.name }}{% if not forloop.last %}, {% endif %}
+                        {% empty %}
+                            {{ project.get_project_type_display }}
+                        {% endfor %}
+                    </p>
+
+                    <h1 class="text-4xl md:text-5xl font-light tracking-wide mb-6" style="color: var(--text-bright);">
+                        {{ project.title }}
+                    </h1>
+
+                    <p class="text-sm leading-relaxed mb-10" style="color: var(--text-main);">
+                        {{ project.short_description }}
+                    </p>
+
+                    <!-- Tags -->
+                    {% if project.tags.all %}
+                    <div class="flex flex-wrap gap-2 mb-8">
+                        {% for tag in project.tags.all %}
+                            <span class="text-[10px] tracking-widest uppercase px-3 py-1 border"
+                                style="border-color: var(--border); color: var(--text-main);">
+                                {{ tag.name }}
+                            </span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <!-- Feature bullets -->
+                    <div class="space-y-3 mb-12">
+                        <div class="flex items-center gap-3 text-[11px] tracking-widest uppercase" style="color: var(--text-main);">
+                            <span class="w-1 h-1 flex-shrink-0" style="background: var(--accent);"></span>
+                            Full Source Code
+                        </div>
+                        <div class="flex items-center gap-3 text-[11px] tracking-widest uppercase" style="color: var(--text-main);">
+                            <span class="w-1 h-1 flex-shrink-0" style="background: var(--accent);"></span>
+                            Lifetime Updates
+                        </div>
+                        <div class="flex items-center gap-3 text-[11px] tracking-widest uppercase" style="color: var(--text-main);">
+                            <span class="w-1 h-1 flex-shrink-0" style="background: var(--accent);"></span>
+                            Verified Performance
+                        </div>
+                        <div class="flex items-center gap-3 text-[11px] tracking-widest uppercase" style="color: var(--text-main);">
+                            <span class="w-1 h-1 flex-shrink-0" style="background: var(--accent);"></span>
+                            Documentation Included
+                        </div>
+                    </div>
+
+                    <!-- Stats row -->
+                    <div class="flex gap-8 mb-10 text-[11px] tracking-widest uppercase" style="color: var(--text-main);">
+                        <span>{{ project.views_count }} Views</span>
+                        <span>{{ project.purchases_count }} Purchases</span>
+                        <span>{{ project.saves_count }} Saves</span>
+                    </div>
+
+                </div>
+
+                <!-- CTA -->
+                <div class="space-y-4">
+
+                    {% if user.is_authenticated %}
+
+                        {% if has_purchased %}
+                            <!-- Already purchased: show Download button -->
+                            <a href="{% url 'download_project' project.slug %}"
+                                class="btn-premium w-full py-4 text-xs tracking-widest font-bold uppercase text-center block">
+                                Download Asset
+                            </a>
+                        {% else %}
+                            <!-- Not yet purchased: show Buy button -->
+                            <form method="post" action="{% url 'buy_project' project.slug %}">
+                                {% csrf_token %}
+                                <button type="submit"
+                                    class="btn-premium w-full py-4 text-xs tracking-widest font-bold uppercase">
+                                    Acquire Asset — ₹{{ project.price }}
+                                </button>
+                            </form>
+                        {% endif %}
+
+                        <!-- Save / Unsave toggle -->
+                        <form method="post" action="{% url 'toggle_save' project.slug %}">
+                            {% csrf_token %}
+                            <button type="submit"
+                                class="block w-full text-center text-xs tracking-widest uppercase transition py-2"
+                                style="color: var(--text-main);"
+                                onmouseover="this.style.color='var(--text-bright)'"
+                                onmouseout="this.style.color='var(--text-main)'">
+                                {% if is_saved %}
+                                    ♥ Saved
+                                {% else %}
+                                    ♡ Save for Later
+                                {% endif %}
+                            </button>
+                        </form>
+
+                    {% else %}
+                        <!-- Not logged in -->
+                        <a href="{% url 'login' %}?next={{ request.path }}"
+                            class="btn-premium w-full py-4 text-xs tracking-widest font-bold uppercase text-center block">
+                            Login to Acquire — ₹{{ project.price }}
+                        </a>
+
+                        <a href="{% url 'login' %}?next={{ request.path }}"
+                            class="block text-center text-xs tracking-widest uppercase transition py-2"
+                            style="color: var(--text-main);"
+                            onmouseover="this.style.color='var(--text-bright)'"
+                            onmouseout="this.style.color='var(--text-main)'">
+                            ♡ Login to Save
+                        </a>
+                    {% endif %}
+
+                    <a href="{% url 'project_list' %}"
+                        class="block text-center text-xs tracking-widest uppercase transition py-2"
+                        style="color: var(--text-main);"
+                        onmouseover="this.style.color='var(--text-bright)'"
+                        onmouseout="this.style.color='var(--text-main)'">
+                        ← Back to Gallery
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Full Description -->
+        <div class="max-w-4xl mx-auto mt-24 text-sm leading-relaxed space-y-6" style="color: var(--text-main);">
+            {{ project.description|linebreaksbr }}
+        </div>
+
+    </section>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+
+    // Fade in hero image once loaded
+    const heroImg = document.getElementById("project-hero-img");
+    if (heroImg) {
+        if (heroImg.complete) {
+            heroImg.classList.remove("opacity-0");
+        } else {
+            heroImg.onload = () => heroImg.classList.remove("opacity-0");
+        }
+    }
+
+</script>
+{% endblock %}

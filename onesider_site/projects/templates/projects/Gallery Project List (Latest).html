@@ -1,0 +1,549 @@
+{% extends 'base.html' %}
+
+{% block title %}Gallery — OneSider{% endblock %}
+
+{% block content %}
+
+    <!-- ── STICKY FILTERS BAR ── -->
+    <div id="sticky-filters"
+        class="fixed left-0 w-full z-40 sticky-bg backdrop-blur-md border-b border-[var(--border)]
+        opacity-0 pointer-events-none transition-all duration-300" style="top: var(--nav-height);">
+
+        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col gap-2 md:flex-row md:justify-between md:items-center">
+
+            <div class="flex gap-3 overflow-x-auto no-scrollbar whitespace-nowrap">
+                <button class="filter-btn" data-category="all">All</button>
+                {% for category in categories %}
+                    <button class="filter-btn" data-category="{{ category.slug }}">{{ category.name }}</button>
+                {% endfor %}
+            </div>
+
+            <div class="flex items-center justify-between gap-4 text-[10px] md:text-xs w-full md:w-auto">
+                <button id="sticky-top"
+                    class="text-xs tracking-widest uppercase transition"
+                    style="color: var(--text-main);"
+                    onmouseover="this.style.color='var(--text-bright)'"
+                    onmouseout="this.style.color='var(--text-main)'">
+                    ↑ Top
+                </button>
+                <button id="sticky-advanced"
+                    class="text-xs tracking-widest uppercase transition"
+                    style="color: var(--text-main);"
+                    onmouseover="this.style.color='var(--text-bright)'"
+                    onmouseout="this.style.color='var(--text-main)'">
+                    Filters →
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ── GALLERY SECTION ── -->
+    <section class="py-20" style="padding-top: calc(var(--nav-height) + 80px);">
+        <div class="max-w-7xl mx-auto px-8">
+
+            <div class="flex items-center gap-6 mb-12">
+                <h2 class="text-xs uppercase tracking-[0.3em] font-medium" style="color: var(--text-bright);">Archive</h2>
+                <div class="h-[1px] flex-1" style="background: var(--border);"></div>
+            </div>
+
+            <!-- Quick Filters -->
+            <div id="filters-wrap" class="mb-10 flex flex-col gap-6">
+
+                <div class="flex items-center justify-between flex-wrap gap-4">
+                    <div class="flex gap-4 flex-wrap">
+                        <button class="filter-btn" data-category="all">All</button>
+                        {% for category in categories %}
+                            <button class="filter-btn" data-category="{{ category.slug }}">{{ category.name }}</button>
+                        {% endfor %}
+                    </div>
+                    <button id="open-advanced"
+                        class="text-xs tracking-widest uppercase transition"
+                        style="color: var(--text-main);"
+                        onmouseover="this.style.color='var(--text-bright)'"
+                        onmouseout="this.style.color='var(--text-main)'">
+                        Filters
+                        <span id="filter-count" class="hidden">(0)</span>
+                        →
+                    </button>
+                </div>
+
+                <div class="flex gap-4 items-center text-xs tracking-widest uppercase" style="color: var(--text-main);">
+                    <span>Price:</span>
+                    <button class="price-chip" data-price="0-50">₹0–50</button>
+                    <button class="price-chip" data-price="50-150">₹50–150</button>
+                    <button class="price-chip" data-price="150+">₹150+</button>
+                </div>
+
+                <button id="clear-filters"
+                    class="text-xs uppercase tracking-widest transition"
+                    style="color: var(--text-main);"
+                    onmouseover="this.style.color='var(--text-bright)'"
+                    onmouseout="this.style.color='var(--text-main)'">
+                    Clear Filters
+                </button>
+
+                <p id="filter-summary" class="text-[11px] tracking-widest uppercase hidden" style="color: var(--text-main);"></p>
+
+            </div>
+
+            <!-- Projects Grid -->
+            <div id="projects-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8"></div>
+
+            <!-- Error State -->
+            <div id="error-state" class="hidden flex flex-col items-center justify-center text-center py-20">
+                <div class="text-4xl mb-4 opacity-40">⚠</div>
+                <p class="text-sm tracking-widest mb-4" style="color: var(--text-main);">SOMETHING WENT WRONG</p>
+                <button id="retry-btn"
+                    class="text-xs tracking-widest uppercase transition"
+                    style="color: var(--text-main);"
+                    onmouseover="this.style.color='var(--text-bright)'"
+                    onmouseout="this.style.color='var(--text-main)'">
+                    Retry
+                </button>
+            </div>
+
+            <!-- Load More -->
+            <div id="load-more-wrap" class="flex justify-center mt-16">
+                <button id="load-more-btn" class="btn-premium px-10 py-3 text-xs tracking-widest uppercase">Load More</button>
+            </div>
+
+        </div>
+    </section>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+
+    // ── FILTER STATE ──────────────────────────────────────────────
+    let filters = createEmptyFilters();
+    let draftFilters = createEmptyFilters();
+
+    function createEmptyFilters() {
+        return { category: [], min_price: null, max_price: null };
+    }
+
+    // ── PAGINATION STATE ──────────────────────────────────────────
+    let page = 1;
+    let loading = false;
+    let hasMore = true;
+    let autoLoads = 0;
+    const maxAutoLoads = 2;
+
+    // ── STICKY FILTERS ────────────────────────────────────────────
+    const filtersWrap = document.getElementById("filters-wrap");
+    const stickyFilters = document.getElementById("sticky-filters");
+
+    document.getElementById("sticky-top").addEventListener("click", () => {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+
+    window.addEventListener("scroll", debounce(() => {
+        const rect = filtersWrap.getBoundingClientRect();
+        if (rect.bottom < 0) {
+            stickyFilters.classList.remove("opacity-0", "pointer-events-none");
+        } else {
+            stickyFilters.classList.add("opacity-0", "pointer-events-none");
+        }
+    }, 80));
+
+    document.getElementById("sticky-advanced").onclick = openAdvanced;
+
+    // ── FILTER BUTTONS ────────────────────────────────────────────
+    const mainFilterBtns = document.querySelectorAll("#filters-wrap .filter-btn");
+    const stickyFilterBtns = document.querySelectorAll("#sticky-filters .filter-btn");
+
+    mainFilterBtns.forEach(btn => {
+        btn.addEventListener("click", () => {
+            btn.style.transform = "scale(0.92)";
+            setTimeout(() => btn.style.transform = "", 120);
+            mainFilterBtns.forEach(b => b.classList.remove("active"));
+            btn.classList.add("active");
+            filters.category = btn.dataset.category === "all" ? [] : [btn.dataset.category];
+            updateURL();
+            syncUIWithFilters();
+            resetState();
+            loadMore();
+        });
+    });
+
+    stickyFilterBtns.forEach(btn => {
+        btn.addEventListener("click", () => {
+            const target = document.querySelector(`#filters-wrap .filter-btn[data-category="${btn.dataset.category}"]`);
+            if (!target) return;
+            target.click();
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    const grid = document.getElementById("projects-grid");
+                    window.scrollTo({
+                        top: grid.getBoundingClientRect().top + window.scrollY - getScrollOffset(),
+                        behavior: "smooth"
+                    });
+                });
+            });
+        });
+    });
+
+    // ── PRICE CHIPS ───────────────────────────────────────────────
+    document.querySelectorAll(".price-chip").forEach(btn => {
+        btn.addEventListener("click", () => {
+            const alreadyActive = btn.classList.contains("active");
+            if (alreadyActive) {
+                btn.classList.remove("active");
+                filters.min_price = null;
+                filters.max_price = null;
+            } else {
+                document.querySelectorAll(".price-chip").forEach(b => b.classList.remove("active"));
+                btn.classList.add("active");
+                const val = btn.dataset.price;
+                if (val === "150+") {
+                    filters.min_price = 150;
+                    filters.max_price = null;
+                } else {
+                    const [min, max] = val.split("-");
+                    filters.min_price = parseFloat(min);
+                    filters.max_price = parseFloat(max);
+                }
+            }
+            updateURL();
+            syncUIWithFilters();
+            resetState();
+            loadMore();
+        });
+    });
+
+    // ── URL SYNC ──────────────────────────────────────────────────
+    function updateURL() {
+        const params = new URLSearchParams();
+        if (filters.category.length > 0) params.set("category", filters.category.join(","));
+        if (filters.min_price !== null) params.set("min", filters.min_price);
+        if (filters.max_price !== null) params.set("max", filters.max_price);
+        const query = params.toString();
+        window.history.replaceState({}, "", query ? `${window.location.pathname}?${query}` : window.location.pathname);
+    }
+
+    function loadFromURL() {
+        const params = new URLSearchParams(window.location.search);
+        const category = params.get("category");
+        const min = params.get("min");
+        const max = params.get("max");
+        filters.category = category ? category.split(",") : [];
+        filters.min_price = min ? parseFloat(min) : null;
+        filters.max_price = max ? parseFloat(max) : null;
+    }
+
+    // ── SYNC UI ───────────────────────────────────────────────────
+    function syncUIWithFilters() {
+        document.querySelectorAll(".filter-btn").forEach(btn => {
+            btn.classList.remove("active");
+            if (filters.category.includes(btn.dataset.category) ||
+                (filters.category.length === 0 && btn.dataset.category === "all")) {
+                btn.classList.add("active");
+            }
+        });
+
+        document.querySelectorAll(".price-chip").forEach(btn => {
+            btn.classList.remove("active");
+            const val = btn.dataset.price;
+            if (val === "150+" && filters.min_price === 150) {
+                btn.classList.add("active");
+            } else if (val.includes("-")) {
+                const [min, max] = val.split("-").map(Number);
+                if (filters.min_price === min && filters.max_price === max) btn.classList.add("active");
+            }
+        });
+
+        // Sync advanced panel chips if they exist
+        document.querySelectorAll(".adv-chip").forEach(chip => {
+            chip.classList.remove("active");
+            if (filters.category.includes(chip.dataset.value)) chip.classList.add("active");
+        });
+
+        const advMin = document.getElementById("adv-min");
+        const advMax = document.getElementById("adv-max");
+        if (advMin) advMin.value = filters.min_price ?? "";
+        if (advMax) advMax.value = filters.max_price ?? "";
+
+        updateFilterCount();
+        updateFilterSummary();
+    }
+
+    function updateFilterCount(source = filters) {
+        let count = source.category.length;
+
+        if (
+            source.min_price !== null ||
+            source.max_price !== null
+        ){
+            count++;
+        }
+        const badge = document.getElementById("filter-count");
+        if (count > 0) { badge.textContent = `(${count})`; badge.classList.remove("hidden"); }
+        else badge.classList.add("hidden");
+    }
+
+    function updateFilterSummary(source = filters) {
+        const summary = [];
+        if (source.category.length > 0)
+            summary.push(source.category.map(c => c.charAt(0).toUpperCase() + c.slice(1)).join(", "));
+        if (source.min_price !== null && source.max_price !== null)
+            summary.push(`₹${source.min_price}–₹${source.max_price}`);
+        else if (source.min_price !== null) summary.push(`₹${source.min_price}+`);
+        else if (source.max_price !== null) summary.push(`<₹${source.max_price}`);
+        const el = document.getElementById("filter-summary");
+        if (summary.length === 0) { el.classList.add("hidden"); el.textContent = ""; }
+        else { el.classList.remove("hidden"); el.textContent = summary.join(" • "); }
+    }
+
+    // ── DRAFT FILTERS (advanced panel) ───────────────────────────
+    function syncDraftFilters() {
+        draftFilters.category = Array.from(document.querySelectorAll(".adv-chip.active")).map(c => c.dataset.value);
+        const min = document.getElementById("adv-min").value;
+        const max = document.getElementById("adv-max").value;
+        draftFilters.min_price = min ? parseFloat(min) : null;
+        draftFilters.max_price = max ? parseFloat(max) : null;
+        updateFilterSummary(draftFilters);
+        updateFilterCount(draftFilters);
+    }
+
+    // ── APPLY ADVANCED ────────────────────────────────────────────
+    function applyAdvancedFilters() {
+        filters = structuredClone(draftFilters);
+        const min = filters.min_price;
+        const max = filters.max_price;
+
+        if ((min !== null && min < 0) || (max !== null && max < 0)) {
+            toast("Price cannot be negative");
+            return;
+        }
+        if (min !== null && max !== null && min > max) {
+            toast("Min price must be less than max");
+            return;
+        }
+
+        closeAdvanced();
+        updateURL();
+        syncUIWithFilters();
+        resetState();
+        loadMore();
+
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                const grid = document.getElementById("projects-grid");
+                window.scrollTo({
+                    top: grid.getBoundingClientRect().top + window.scrollY - getScrollOffset(),
+                    behavior: "smooth"
+                });
+            });
+        });
+    }
+
+    // ── RESET FILTERS ─────────────────────────────────────────────
+    function resetFilters() {
+        filters = createEmptyFilters();
+        document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+        const allBtn = document.querySelector('[data-category="all"]');
+        if (allBtn) allBtn.classList.add("active");
+        document.querySelectorAll(".price-chip").forEach(b => b.classList.remove("active"));
+        updateURL();
+        syncUIWithFilters();
+        resetState();
+        loadMore();
+    }
+
+    // ── REAL API FETCH ────────────────────────────────────────────
+    // Calls /gallery/api/?page=N&category=slug&min=N&max=N
+    // Returns JSON: { projects: [...], has_more: bool }
+    async function fetchProjects() {
+        const params = new URLSearchParams();
+        params.set("page", page);
+        if (filters.category.length > 0) params.set("category", filters.category[0]);
+        if (filters.min_price !== null) params.set("min_price", filters.min_price);
+        if (filters.max_price !== null) params.set("max_price", filters.max_price);
+
+        const response = await fetch(`/projects/api/?${params.toString()}`, {
+            headers: { "X-Requested-With": "XMLHttpRequest" }
+        });
+
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return await response.json();
+    }
+
+    // ── LOAD MORE / PAGINATION ────────────────────────────────────
+    window.addEventListener("scroll", () => {
+        if (loading || !hasMore || autoLoads >= maxAutoLoads) return;
+        if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 200) {
+            autoLoads++;
+            loadMore();
+        }
+    });
+
+    function showError() {
+        document.getElementById("projects-grid").style.display = "none";
+        document.getElementById("error-state").classList.remove("hidden");
+    }
+
+    function hideError() {
+        document.getElementById("projects-grid").style.display = "grid";
+        document.getElementById("error-state").classList.add("hidden");
+    }
+
+    async function loadMore() {
+        if (loading) return;
+
+        const btn = document.getElementById("load-more-btn");
+        if (btn) { btn.disabled = true; btn.classList.add("opacity-50", "cursor-not-allowed"); btn.innerText = "Loading..."; }
+
+        loading = true;
+        hideError();
+        const grid = document.getElementById("projects-grid");
+
+        // Show skeleton placeholders while fetching
+        const skeletons = [];
+        for (let i = 0; i < 3; i++) {
+            const sk = document.createElement("div");
+            sk.className = "card-container skeleton h-[220px]";
+            grid.appendChild(sk);
+            skeletons.push(sk);
+        }
+
+        try {
+            const data = await fetchProjects();
+
+            // Remove skeletons
+            skeletons.forEach(sk => sk.remove());
+
+            if (!data.projects || data.projects.length === 0) {
+
+                if (page === 1) {
+
+                    grid.innerHTML = `
+                        <div class="col-span-full flex flex-col items-center justify-center text-center py-20">
+                            <div class="text-4xl mb-4 opacity-40">∅</div>
+                            <p class="text-sm tracking-widest mb-4"
+                            style="color: var(--text-main);">
+                                NO PROJECTS YET
+                            </p>
+
+                            <button onclick="resetFilters()"
+                                class="text-xs tracking-widest uppercase transition"
+                                style="color: var(--text-main);"
+                                onmouseover="this.style.color='var(--text-bright)'"
+                                onmouseout="this.style.color='var(--text-main)'">
+                                Reset Filters
+                            </button>
+                        </div>
+                    `;
+
+                    document.getElementById("load-more-wrap").innerHTML = "";
+
+                } else {
+
+                    document.getElementById("load-more-wrap").innerHTML =
+                        `<p class="text-xs tracking-widest uppercase"
+                            style="color: var(--text-main); opacity:0.4;">
+                            End of Archive
+                        </p>`;
+                }
+
+                hasMore = false;
+                loading = false;
+
+                return;
+            }
+
+            renderProjects(data.projects);
+            hasMore = data.has_more;
+            page++;
+            loading = false;
+
+            if (btn) {
+                btn.disabled = false;
+                btn.classList.remove("opacity-50", "cursor-not-allowed");
+                btn.innerText = "Load More";
+            }
+
+            if (!hasMore) {
+                document.getElementById("load-more-wrap").innerHTML =
+                    `<p class="text-xs tracking-widest uppercase" style="color: var(--text-main); opacity: 0.4;">End of Archive</p>`;
+            }
+
+        } catch (err) {
+            skeletons.forEach(sk => sk.remove());
+            showError();
+            loading = false;
+            if (btn) {
+                btn.disabled = false;
+                btn.classList.remove("opacity-50", "cursor-not-allowed");
+                btn.innerText = "Load More";
+            }
+        }
+    }
+
+    document.getElementById("load-more-wrap").addEventListener("click", (e) => {
+        if (e.target.id === "load-more-btn" && !loading && hasMore) loadMore();
+    });
+
+    // ── CARD TEMPLATE ─────────────────────────────────────────────
+    // Expects shape from project_list_api:
+    // { title, price, slug, thumbnail_url, short_description }
+    function createCardHTML(item) {
+        const imgTag = item.thumbnail_url
+            ? `<img loading = 'lazy' decoding = 'async' src="${item.thumbnail_url}" alt="${item.title}" class="w-full h-full object-cover opacity-0 transition-opacity duration-500">`
+            : "";
+
+        return `
+            <a href="/gallery/${item.slug}/" class="w-full card-container cursor-pointer block animate-subtle">
+                <div class="aspect-[16/10] card-image-wrap" style="background: var(--bg-deep);">
+                    ${imgTag}
+                </div>
+                <div class="p-6">
+                    <h3 class="text-base font-medium mb-1" style="color: var(--text-bright);">${item.title || "Untitled"}</h3>
+                    <p class="text-xs" style="color: var(--text-main);">${item.short_description || ""}</p>
+                    ${item.price ? `<p class="text-xs mt-2" style="color: var(--text-main);">₹${item.price}</p>` : ""}
+                </div>
+            </a>`;
+    }
+
+    function renderProjects(projects) {
+        const grid = document.getElementById("projects-grid");
+        projects.forEach(item => {
+            const wrapper = document.createElement("div");
+            wrapper.innerHTML = createCardHTML(item);
+            const card = wrapper.firstElementChild;
+            card.addEventListener("animationend", () => card.classList.remove("animate-subtle"), { once: true });
+            grid.appendChild(card);
+        });
+        applyImageFadeIn(grid);
+    }
+
+    // ── RESET STATE ───────────────────────────────────────────────
+    function resetState() {
+        hideError();
+        page = 1;
+        hasMore = true;
+        autoLoads = 0;
+        loading = false;
+        document.getElementById("projects-grid").innerHTML = "";
+        document.getElementById("load-more-wrap").innerHTML =
+            `<button id="load-more-btn" class="btn-premium px-10 py-3 text-xs tracking-widest uppercase">Load More</button>`;
+    }
+
+    // ── CONTROLS ──────────────────────────────────────────────────
+    document.getElementById("clear-filters").onclick = () => { resetFilters(); toast("Filters Cleared"); };
+    document.getElementById("open-advanced").onclick = openAdvanced;
+    document.getElementById("retry-btn").onclick = () => { hideError(); resetState(); loadMore(); };
+
+    // ── INIT ──────────────────────────────────────────────────────
+    function init() {
+        loadFromURL();
+        syncUIWithFilters();
+        resetState();
+        loadMore();
+    }
+
+    document.addEventListener("DOMContentLoaded", init);
+
+</script>
+{% endblock %}

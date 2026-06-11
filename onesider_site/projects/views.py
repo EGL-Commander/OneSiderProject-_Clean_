@@ -9,12 +9,68 @@ from purchases.utils import cleanup_expired_tokens
 from purchases.gdrive import download_file_bytes
 from django.views.decorators.http import require_http_methods
 from django.conf import settings
+from django.http import JsonResponse
+from django.core.paginator import Paginator
 
 # Create your views here.
 
 def project_list(request):
-    projects = Project.objects.filter(is_active=True).order_by('?')
-    return render(request, 'projects/project_list.html', {'projects': projects})
+    categories = Category.objects.all()
+
+    return render(request, 'projects/Gallery Project List (Latest).html', {'categories' : categories})
+
+def project_list_api(request):
+
+    projects = Project.objects.filter(
+        is_active=True
+    ).order_by('-created_at')
+
+    category = request.GET.get('category')
+    min_price = request.GET.get('min_price')
+    max_price = request.GET.get('max_price')
+
+    if category:
+        projects = projects.filter(
+            categories__slug=category
+        )
+
+    if min_price:
+        projects = projects.filter(
+            price__gte=min_price
+        )
+
+    if max_price:
+        projects = projects.filter(
+            price__lte=max_price
+        )
+
+    projects = projects.distinct()
+
+    paginator = Paginator(projects, 12)
+
+    page_number = request.GET.get('page', 1)
+
+    page_obj = paginator.get_page(page_number)
+
+    data = []
+
+    for project in page_obj:
+        data.append({
+            "title": project.title,
+            "slug": project.slug,
+            "price": str(project.price),
+            "short_description": project.short_description,
+            "thumbnail_url": (
+                project.thumbnail.url
+                if project.thumbnail
+                else None
+            )
+        })
+
+    return JsonResponse({
+        "projects": data,
+        "has_more": page_obj.has_next()
+    })
 
 def project_detail(request, slug):
     project = get_object_or_404(Project, slug=slug, is_active=True)
@@ -40,7 +96,7 @@ def project_detail(request, slug):
             status='success'
         ).exists()
 
-    return render(request, 'projects/project_detail.html', {
+    return render(request, 'projects/Project Detail (Latest).html', {
         'project': project,
         'has_purchased': has_purchased
     })
