@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Profile — OneSider{% endblock %}
+
+{% block content %}
+
+<section class="py-20" style="padding-top: calc(var(--nav-height) + 80px);">
+
+    <div class="max-w-3xl mx-auto px-6">
+
+        <!-- Header -->
+        <div class="flex items-center gap-6 mb-12">
+            <h2
+                class="text-xs uppercase tracking-[0.3em] font-medium"
+                style="color: var(--text-bright);">
+                Profile Settings
+            </h2>
+
+            <div
+                class="h-[1px] flex-1"
+                style="background: var(--border);">
+            </div>
+        </div>
+
+        <!-- Form Card -->
+        <div class="card-container p-8 md:p-10">
+
+            <form method="POST" enctype="multipart/form-data" class="space-y-10">
+
+                {% csrf_token %}
+
+                <!-- Display Name -->
+                <div>
+
+                    <label
+                        class="block text-xs uppercase tracking-widest mb-3"
+                        style="color: var(--text-main);">
+
+                        Display Name
+
+                    </label>
+
+                    {{ form.display_name }}
+
+                    {% if form.display_name.errors %}
+                        <p class="mt-2 text-xs text-red-400">
+                            {{ form.display_name.errors.0 }}
+                        </p>
+                    {% endif %}
+
+                </div>
+
+                <!-- Avatar -->
+                <div>
+
+                    <label
+                        class="block text-xs uppercase tracking-widest mb-3"
+                        style="color: var(--text-main);">
+
+                        Avatar
+
+                    </label>
+
+                    {{ form.avatar }}
+
+                    <p
+                        class="text-xs mt-3"
+                        style="color: var(--text-main); opacity: .7;">
+
+                        Avatar system will be upgraded to OneSider presets later.
+
+                    </p>
+
+                </div>
+
+                <!-- Buttons -->
+                <div class="flex flex-col sm:flex-row gap-4 pt-4">
+
+                    <button
+                        type="submit"
+                        class="btn-premium px-8 py-3 text-xs tracking-widest uppercase">
+
+                        Save Changes
+
+                    </button>
+
+                    <a
+                        href="{% url 'profile' %}"
+                        class="px-8 py-3 text-xs tracking-widest uppercase text-center transition"
+                        style="color: var(--text-main);"
+                        onmouseover="this.style.color='var(--text-bright)'"
+                        onmouseout="this.style.color='var(--text-main)'">
+
+                        Cancel
+
+                    </a>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</section>
+
+{% endblock %}
+
+{% block scripts %}
+
+<script>
+
+document.addEventListener("DOMContentLoaded", () => {
+
+    const displayNameInput = document.getElementById("id_display_name");
+
+    if (displayNameInput) {
+
+        displayNameInput.classList.add(
+            "input-premium",
+            "bg-transparent",
+            "w-full",
+            "py-2",
+            "text-sm"
+        );
+
+        displayNameInput.placeholder = "Enter display name";
+    }
+
+    const avatarInput = document.getElementById("id_avatar");
+
+    if (avatarInput) {
+
+        avatarInput.classList.add(
+            "text-sm"
+        );
+
+        avatarInput.style.color = "var(--text-main)";
+    }
+
+});
+
+</script>
+
+{% endblock %}

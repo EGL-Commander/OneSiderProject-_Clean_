@@ -9,16 +9,24 @@ from projects.models import Project
 def profile_view(request):
     profile = request.user.profile
 
-    saved_projects = profile.saved_projects.all()
+    saved_projects = (
+        profile.saved_projects
+        .select_related()
+        .prefetch_related('categories')
+    )
 
-    purchased_projects = Project.objects.filter(
-        purchases__user=request.user,
-        purchases__status='success'
-    ).distinct()
+    purchased_projects = (
+        Project.objects.filter(
+            purchases__user=request.user,
+            purchases__status='success'
+        )
+        .prefetch_related('categories')
+        .distinct()
+    )
 
     return render(
         request,
-        "accounts/profile.html",
+        "accounts/Profile (Latest).html",
         {
             "profile": profile,
             "saved_projects": saved_projects,
@@ -38,4 +46,4 @@ def edit_profile(request):
     else:
         form = ProfileUpdateForm(instance=profile)    
 
-    return render(request,'accounts/edit_profile.html',{'form' : form})
+    return render(request,'accounts/Edit Profile.html',{'form' : form})
