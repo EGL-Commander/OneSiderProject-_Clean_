@@ -266,9 +266,22 @@ def download_with_token(request, token):
     try:
         filename, mimetype, fh = download_file_bytes(token_obj.project.cloud_file_id)
     except Exception as e:
+        
+        context = {
+            "project" : token_obj.project
+        }
+
         if settings.DEBUG:
-            return HttpResponseForbidden(f"Drive fetch failed: {type(e).__name__} — {e}")
-        return HttpResponseForbidden('Could not fetch file from Drive. Please try again later.')
+            context["error"] = (
+                f"{type(e).__name__}: {e}"
+            )
+
+        return render(
+            request,
+            "projects/download_error.html",
+            context,
+            status=503
+        )
 
     token_obj.is_used = True
     token_obj.save(update_fields=['is_used'])

@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Download Error
+{% endblock %}
+
+{% block content %}
+
+<section class="min-h-screen flex items-center justify-center px-6">
+
+    <div class="card-container max-w-lg p-8 text-center">
+
+        <p class="text-xs uppercase tracking-[0.3em]"
+           style="color: var(--text-main);">
+            Cloud Storage
+        </p>
+
+        <h1 class="text-3xl mt-4 mb-4"
+            style="color: var(--text-bright);">
+            Download Unavailable
+        </h1>
+
+        <p style="color: var(--text-main);">
+            The asset could not be retrieved from cloud storage.
+            Please try again later.
+        </p>
+
+        {% if error %}
+            <div class="mt-6 text-left p-4 rounded"
+                 style="background: var(--bg-soft);">
+
+                <div class="mt-6 p-4 rounded text-left overflow-x-auto"
+                    style="background: var(--bg-soft);">
+
+                    <code class="block text-xs whitespace-pre-wrap break-all"
+                        style="color: var(--text-main);">
+                        {{ error }}
+                    </code>
+
+                </div>
+
+            </div>
+        {% endif %}
+
+        <a href="{% url 'project_detail' project.slug %}"
+           class="btn-premium inline-block mt-8 px-8 py-3">
+            Return to Project
+        </a>
+
+    </div>
+
+</section>
+
+{% endblock %}
