@@ -7,7 +7,7 @@ from django.http import HttpResponseForbidden, FileResponse
 from django.utils import timezone
 from purchases.utils import cleanup_expired_tokens
 from purchases.gdrive import download_file_bytes
-from django.views.decorators.http import require_http_methods
+from django.views.decorators.http import require_http_methods, require_POST
 from django.conf import settings
 from django.http import JsonResponse
 from django.core.paginator import Paginator
@@ -73,7 +73,12 @@ def project_list_api(request):
     })
 
 def project_detail(request, slug):
-    project = get_object_or_404(Project, slug=slug, is_active=True)
+    project = get_object_or_404(
+        Project.objects.prefetch_related(
+            'categories', 'tags'),
+        slug=slug,
+        is_active=True
+    )
 
     viewed_projects = request.session.get('viewed_projects', [])
 
@@ -84,11 +89,12 @@ def project_detail(request, slug):
 
         viewed_projects.append(project.pk)
 
-        request.session['viewed_projects'] = viewed_projects
+        request.session['viewed_projects'] = viewed_projects[-100:]
     
     project.refresh_from_db(fields=['views_count', 'purchases_count', 'saves_count'])
 
     has_purchased = False
+    is_saved = False
     if request.user.is_authenticated:
         has_purchased = Purchase.objects.filter(
             user=request.user,
@@ -96,9 +102,17 @@ def project_detail(request, slug):
             status='success'
         ).exists()
 
+        is_saved = request.user.profile.saved_projects.filter(
+            pk=project.pk
+        ).exists()
+
+    tags = project.tags.all()
+
     return render(request, 'projects/Project Detail (Latest).html', {
         'project': project,
-        'has_purchased': has_purchased
+        'has_purchased': has_purchased,
+        'is_saved' : is_saved,
+        'tags' : tags
     })
 
 def category_projects(request, category_slug):
@@ -154,6 +168,7 @@ def project_search(request):
         })
 
 @login_required
+@require_POST
 def toggle_save(request, slug):
     project = get_object_or_404(Project, slug=slug, is_active=True)
     profile = request.user.profile
@@ -166,9 +181,15 @@ def toggle_save(request, slug):
     true_count = project.saved_by.count()
     Project.objects.filter(pk=project.pk).update(saves_count=true_count)
 
-    return redirect('project_detail', slug=project.slug)
+    saved = profile.saved_projects.filter(pk=project.pk).exists()
+
+    return JsonResponse({
+        'saved' : saved,
+        'saves_count' : true_count
+    })
 
 @login_required
+@require_POST
 def buy_project(request, slug):
     project = get_object_or_404(Project, slug=slug, is_active=True)
     user = request.user

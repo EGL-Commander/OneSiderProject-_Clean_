@@ -45,9 +45,9 @@
                     </p>
 
                     <!-- Tags -->
-                    {% if project.tags.all %}
+                    {% if tags %}
                     <div class="flex flex-wrap gap-2 mb-8">
-                        {% for tag in project.tags.all %}
+                        {% for tag in tags %}
                             <span class="text-[10px] tracking-widest uppercase px-3 py-1 border"
                                 style="border-color: var(--border); color: var(--text-main);">
                                 {{ tag.name }}
@@ -80,7 +80,7 @@
                     <div class="flex gap-8 mb-10 text-[11px] tracking-widest uppercase" style="color: var(--text-main);">
                         <span>{{ project.views_count }} Views</span>
                         <span>{{ project.purchases_count }} Purchases</span>
-                        <span>{{ project.saves_count }} Saves</span>
+                        <span id = "save-count">{{ project.saves_count }} Saves</span>
                     </div>
 
                 </div>
@@ -108,9 +108,9 @@
                         {% endif %}
 
                         <!-- Save / Unsave toggle -->
-                        <form method="post" action="{% url 'toggle_save' project.slug %}">
+                        <form id = "save-form" method="post" action="{% url 'toggle_save' project.slug %}">
                             {% csrf_token %}
-                            <button type="submit"
+                            <button id = "save-btn" type="submit"
                                 class="block w-full text-center text-xs tracking-widest uppercase transition py-2"
                                 style="color: var(--text-main);"
                                 onmouseover="this.style.color='var(--text-bright)'"
@@ -173,6 +173,62 @@
         } else {
             heroImg.onload = () => heroImg.classList.remove("opacity-0");
         }
+    }
+
+    const saveForm = document.getElementById("save-form");
+
+    if (saveForm) {
+
+        saveForm.addEventListener("submit", async (e) => {
+
+            e.preventDefault();
+
+            const response = await fetch(
+                saveForm.action,
+                {
+                    method: "POST",
+                    headers: {
+                        "X-CSRFToken":
+                            document.querySelector(
+                                "[name=csrfmiddlewaretoken]"
+                            ).value
+                    }
+                }
+            );
+
+            if (!response.ok) {
+                toast("Something went wrong");
+                return;
+            }
+
+            const data = await response.json();
+
+            const btn =
+                document.getElementById("save-btn");
+
+            const count =
+                document.getElementById("save-count");
+
+            count.innerText =
+                `${data.saves_count} Saves`;
+
+            if (data.saved) {
+
+                btn.innerText = "♥ Saved";
+
+                toast("Project Saved");
+
+            } else {
+
+                btn.innerText =
+                    "♡ Save for Later";
+
+                toast("Project Removed");
+
+            }
+
+        });
+
     }
 
 </script>
