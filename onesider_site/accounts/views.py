@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from .forms import ProfileUpdateForm
 from projects.models import Project
+from .forms import RegisterForm
 
 # Create your views here.
 
@@ -47,3 +48,27 @@ def edit_profile(request):
         form = ProfileUpdateForm(instance=profile)    
 
     return render(request,'accounts/Edit Profile.html',{'form' : form})
+
+def register_view(request):
+
+    if request.method == "POST":
+
+        form = RegisterForm(request.POST)
+
+        if form.is_valid():
+
+            form.save()
+
+            return redirect("login")
+
+    else:
+
+        form = RegisterForm()
+
+    return render(
+        request,
+        "accounts/register.html",
+        {
+            "form": form
+        }
+    )

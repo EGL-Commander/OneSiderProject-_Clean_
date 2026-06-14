@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+
+{% block title %}Register - OneSider{% endblock %}
+
+{% block content %}
+
+<section
+    class="min-h-screen flex items-center justify-center px-6"
+    style="padding-top: calc(var(--nav-height) + 40px);"
+>
+
+<div class="w-full max-w-md">
+
+    <div class="card-container p-8 md:p-10">
+
+        <div class="mb-10 text-center">
+
+            <p
+                class="text-xs tracking-[0.35em] uppercase mb-3"
+                style="color: var(--text-main);"
+            >
+                Access
+            </p>
+
+            <h1
+                class="text-3xl md:text-4xl font-medium mb-3"
+                style="color: var(--text-bright);"
+            >
+                Create Account
+            </h1>
+
+            <p
+                class="text-sm"
+                style="color: var(--text-main);"
+            >
+                Join the archive.
+            </p>
+
+        </div>
+
+        <form method="post" class="space-y-8 register-form">
+
+            {% csrf_token %}
+
+            <div>
+                <label
+                    class="block text-xs uppercase tracking-widest mb-2"
+                    style="color: var(--text-main);"
+                >
+                    Username
+                </label>
+
+                {{ form.username }}
+            </div>
+
+            <div>
+                <label
+                    class="block text-xs uppercase tracking-widest mb-2"
+                    style="color: var(--text-main);"
+                >
+                    Email
+                </label>
+
+                {{ form.email }}
+            </div>
+
+            <div>
+                <label
+                    class="block text-xs uppercase tracking-widest mb-2"
+                    style="color: var(--text-main);"
+                >
+                    Password
+                </label>
+
+                {{ form.password1 }}
+            </div>
+
+            <div>
+                <label
+                    class="block text-xs uppercase tracking-widest mb-2"
+                    style="color: var(--text-main);"
+                >
+                    Confirm Password
+                </label>
+
+                {{ form.password2 }}
+            </div>
+
+            {% if form.errors %}
+                <div
+                    class="border rounded-lg p-4 text-sm"
+                    style="
+                        border-color:#dc2626;
+                        color:#dc2626;
+                    "
+                >
+                    {% for field in form %}
+                        {% for error in field.errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    {% endfor %}
+
+                    {% for error in form.non_field_errors %}
+                        <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <button
+                type="submit"
+                class="btn-premium w-full py-3 text-xs tracking-widest uppercase"
+            >
+                Create Account
+            </button>
+
+        </form>
+
+        <div class="mt-8 text-center">
+
+            <p
+                class="text-sm"
+                style="color: var(--text-main);"
+            >
+                Already have access?
+            </p>
+
+            <a
+                href="{% url 'login' %}"
+                class="inline-block mt-3 text-xs tracking-widest uppercase transition"
+                style="color: var(--text-bright);"
+            >
+                Sign In →
+            </a>
+
+        </div>
+
+    </div>
+
+</div>
+
+</section>
+
+{% endblock %}
+
+{% block scripts %}
+
+<script>
+
+document.addEventListener("DOMContentLoaded", () => {
+
+    document.querySelectorAll(".register-form input").forEach(input => {
+
+        input.classList.add(
+            "input-premium",
+            "bg-transparent",
+            "w-full",
+            "py-2",
+            "text-sm"
+        );
+
+    });
+
+});
+
+</script>
+
+{% endblock %}
