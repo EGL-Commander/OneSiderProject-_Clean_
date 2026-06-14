@@ -79,7 +79,7 @@
                     <!-- Stats row -->
                     <div class="flex gap-8 mb-10 text-[11px] tracking-widest uppercase" style="color: var(--text-main);">
                         <span>{{ project.views_count }} Views</span>
-                        <span>{{ project.purchases_count }} Purchases</span>
+                        <span id = "purchase-count">{{ project.purchases_count }} Purchases</span>
                         <span id = "save-count">{{ project.saves_count }} Saves</span>
                     </div>
 
@@ -90,22 +90,36 @@
 
                     {% if user.is_authenticated %}
 
-                        {% if has_purchased %}
-                            <!-- Already purchased: show Download button -->
-                            <a href="{% url 'download_project' project.slug %}"
-                                class="btn-premium w-full py-4 text-xs tracking-widest font-bold uppercase text-center block">
-                                Download Asset
-                            </a>
-                        {% else %}
-                            <!-- Not yet purchased: show Buy button -->
-                            <form method="post" action="{% url 'buy_project' project.slug %}">
-                                {% csrf_token %}
-                                <button type="submit"
-                                    class="btn-premium w-full py-4 text-xs tracking-widest font-bold uppercase">
-                                    Acquire Asset — ₹{{ project.price }}
-                                </button>
-                            </form>
-                        {% endif %}
+                        <div id="purchase-area">
+
+                            {% if has_purchased %}
+                                <a href="{% url 'download_project' project.slug %}"
+                                    class="btn-premium w-full py-4 text-xs tracking-widest font-bold uppercase text-center block">
+                                    Download Asset
+                                </a>
+
+                            {% else %}
+                                <form
+                                    id="purchase-form"
+                                    method="post"
+                                    action="{% url 'buy_project' project.slug %}"
+                                >
+                                    {% csrf_token %}
+
+                                    <button
+                                        id="purchase-btn"
+                                        data-price="{{ project.price }}"
+                                        type="submit"
+                                        class="btn-premium w-full py-4 text-xs tracking-widest font-bold uppercase"
+                                    >
+                                        Acquire Asset — ₹{{ project.price }}
+                                    </button>
+
+                                </form>
+
+                            {% endif %}
+
+                        </div>
 
                         <!-- Save / Unsave toggle -->
                         <form id = "save-form" method="post" action="{% url 'toggle_save' project.slug %}">
@@ -189,7 +203,7 @@
                     method: "POST",
                     headers: {
                         "X-CSRFToken":
-                            document.querySelector(
+                            saveForm.querySelector(
                                 "[name=csrfmiddlewaretoken]"
                             ).value
                     }
@@ -228,6 +242,76 @@
             }
 
         });
+
+    }
+
+    const purchaseForm = document.getElementById("purchase-form");
+
+    if (purchaseForm) {
+
+        purchaseForm.addEventListener(
+            "submit",
+            async (e) => {
+
+                e.preventDefault();
+
+                const btn =
+                    document.getElementById(
+                        "purchase-btn"
+                    );
+
+                btn.disabled = true;
+                btn.innerText = "Processing...";
+
+                const response = await fetch(
+                    purchaseForm.action,
+                    {
+                        method: "POST",
+                        headers: {
+                            "X-CSRFToken":
+                                purchaseForm.querySelector(
+                                    "[name=csrfmiddlewaretoken]"
+                                ).value
+                        }
+                    }
+                );
+
+                if (!response.ok) {
+
+                    toast(
+                        "Purchase failed"
+                    );
+
+                    btn.disabled = false;
+                    btn.innerText =
+                        `Acquire Asset — ₹${btn.dataset.price}`;
+
+                    return;
+                }
+
+                const data =
+                    await response.json();
+
+                document.getElementById(
+                    "purchase-count"
+                ).innerText =
+                    `${data.purchases_count} Purchases`;
+
+                document.getElementById(
+                    "purchase-area"
+                ).innerHTML = `
+                    <a href="${data.download_url}"
+                        class="btn-premium w-full py-4 text-xs tracking-widest font-bold uppercase text-center block">
+                        Download Asset
+                    </a>
+                `;
+
+                toast(
+                    "Asset acquired successfully"
+                );
+
+            }
+        );
 
     }
 

@@ -11,6 +11,7 @@ from django.views.decorators.http import require_http_methods, require_POST
 from django.conf import settings
 from django.http import JsonResponse
 from django.core.paginator import Paginator
+from django.urls import reverse
 
 # Create your views here.
 
@@ -207,7 +208,14 @@ def buy_project(request, slug):
     true_count = project.purchases.filter(status='success').count()
     Project.objects.filter(pk=project.pk).update(purchases_count=true_count)
 
-    return redirect('project_detail', slug=project.slug)
+    return JsonResponse({
+        "success" : True,
+        "purchases_count" : true_count,
+        "download_url" : reverse(
+            "download_project", 
+            args=[project.slug]
+        )
+    })
 
 @login_required
 @require_http_methods(['GET', 'POST'])
