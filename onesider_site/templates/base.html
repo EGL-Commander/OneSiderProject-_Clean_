@@ -390,9 +390,73 @@
                     <span class="theme-toggle-knob"></span>
                 </button>
 
-                <a href="/access/" class="hidden md:block btn-premium px-5 py-2 text-xs tracking-widest font-medium">
-                    ACCESS
-                </a>
+                {% if request.user.is_authenticated %}
+
+                    <div class="hidden md:block relative group">
+
+                        <button
+                            class="flex items-center gap-3 px-4 py-2 rounded-lg transition"
+                            style="color: var(--text-bright);"
+                        >
+
+                            <div
+                                class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium"
+                                style="
+                                    background: rgba(var(--accent-rgb), 0.15);
+                                    border: 1px solid var(--border);
+                                "
+                            >
+                                {{ request.user.username|first|upper }}
+                            </div>
+
+                            <span class="text-sm">
+                                {{ request.user.username }}
+                            </span>
+
+                            <span class="text-xs opacity-50">▼</span>
+
+                        </button>
+
+                        <div
+                            class="absolute right-0 top-full mt-2 w-48 card-container
+                            opacity-0 invisible group-hover:opacity-100
+                            group-hover:visible transition-all duration-200 z-50"
+                        >
+
+                            <a href="{% url 'profile' %}"
+                                class="block px-4 py-3 hover:bg-white/5 transition">
+                                Profile
+                            </a>
+
+                            <a href="{% url 'profile_edit' %}"
+                                class="block px-4 py-3 hover:bg-white/5 transition">
+                                Edit Profile
+                            </a>
+
+                            <form method="post" action="{% url 'logout' %}">
+                                {% csrf_token %}
+
+                                <button
+                                    type="submit"
+                                    class="block w-full text-left px-4 py-3 hover:bg-white/5 transition"
+                                    style="color: #dc2626;"
+                                >
+                                    Logout
+                                </button>
+                            </form>
+
+                        </div>
+
+                    </div>
+
+                    {% else %}
+
+                    <a href="{% url 'login' %}"
+                        class="hidden md:block btn-premium px-5 py-2 text-xs tracking-widest font-medium">
+                        ACCESS
+                    </a>
+
+                    {% endif %}
 
             </div>
         </div>
@@ -416,11 +480,59 @@
         text-sm tracking-widest uppercase z-40 transition-all duration-300 ease-out -translate-y-full opacity-0 pointer-events-none"
         style="top: var(--nav-height);">
 
-        <a href="/access/"
-            class="m-4 px-6 py-3 text-center border rounded-md nav-link-item active:scale-95 transition-all duration-200"
-            style="border-color: var(--accent);">
-            ACCESS
-        </a>
+        {% if request.user.is_authenticated %}
+
+            <div class="m-4 card-container p-4">
+
+                <p
+                    class="text-xs uppercase tracking-widest mb-2"
+                    style="color: var(--text-main);"
+                >
+                    Logged In As
+                </p>
+
+                <p
+                    class="text-sm"
+                    style="color: var(--text-bright);"
+                >
+                    {{ request.user.username }}
+                </p>
+
+            </div>
+
+            <a href="{% url 'profile' %}"
+                class="p-5 transition"
+                style="color: var(--text-main);">
+                Profile
+            </a>
+
+            <a href="{% url 'profile_edit' %}"
+                class="p-5 transition"
+                style="color: var(--text-main);">
+                Edit Profile
+            </a>
+
+            <form method="post" action="{% url 'logout' %}">
+                {% csrf_token %}
+
+                <button
+                    type="submit"
+                    class="w-full p-5 text-left transition"
+                    style="color: #dc2626;"
+                >
+                    Logout
+                </button>
+            </form>
+
+            {% else %}
+
+            <a href="{% url 'login' %}"
+                class="m-4 px-6 py-3 text-center border rounded-md nav-link-item active:scale-95 transition-all duration-200"
+                style="border-color: var(--accent);">
+                ACCESS
+            </a>
+
+            {% endif %}
 
         <a href="/" class="p-5 transition hover:tracking-wider"
             style="color: var(--text-main);"
