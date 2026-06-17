@@ -67,7 +67,7 @@ def register_view(request):
 
     return render(
         request,
-        "accounts/register.html",
+        "accounts/Register.html",
         {
             "form": form
         }
