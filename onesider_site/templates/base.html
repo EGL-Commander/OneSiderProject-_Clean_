@@ -1,4 +1,3 @@
-<!-- code 2 -->
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
 <head>
@@ -384,7 +383,7 @@
                     <span class="menu-line bottom"></span>
                 </button>
 
-                <input type="text" placeholder="Search..." class="hidden md:block search-input bg-transparent text-sm py-1">
+                <input id="desktop-search" type="text" placeholder="Search..." class="hidden md:block search-input bg-transparent text-sm py-1">
 
                 <button class="theme-toggle hidden md:block" id="theme-toggle-desktop" aria-label="Toggle theme">
                     <span class="theme-toggle-knob"></span>
@@ -467,7 +466,7 @@
         class="fixed inset-0 search-overlay-bg backdrop-blur-md z-50 opacity-0 pointer-events-none
         transition-all duration-300 flex items-center justify-center">
 
-        <input type="text" placeholder="Search..."
+        <input id="mobile-search" type="text" placeholder="Search..."
             class="w-[80%] max-w-xl bg-transparent border-b border-[var(--border)]
             text-lg py-3 outline-none focus:border-[var(--accent)] transition"
             style="color: var(--text-bright);">
@@ -604,7 +603,7 @@
             <div class="flex flex-col md:flex-row justify-between items-center text-xs tracking-widest uppercase gap-4" style="color: var(--text-main);">
                 <p>© 2026 OneSider</p>
                 <p class="text-center opacity-40"> Built in silence. Designed for control. </p>
-                <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})"N
+                <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})"
                     class="transition"
                     onmouseover="this.style.color='var(--text-bright)'"
                     onmouseout="this.style.color='var(--text-main)'"> ↑ Back to Top </button>
@@ -902,6 +901,43 @@
             tray.scrollBy({ left: dir * 240, behavior: "smooth" });
         }
         // ──────────────────────────────────────────────────────────
+
+        function performSearch(query) {
+
+            query = query.trim();
+
+            if (!query)
+                return;
+
+            const url =
+                `/projects/?q=${encodeURIComponent(query)}`;
+
+            window.location.href = url;
+        }
+
+        document
+            .getElementById("desktop-search")
+            ?.addEventListener(
+                "keydown",
+                e => {
+
+                    if (e.key === "Enter")
+                        performSearch(e.target.value);
+
+                }
+            );
+
+        document
+            .getElementById("mobile-search")
+            ?.addEventListener(
+                "keydown",
+                e => {
+
+                    if (e.key === "Enter")
+                        performSearch(e.target.value);
+
+                }
+            );
 
     </script>
 

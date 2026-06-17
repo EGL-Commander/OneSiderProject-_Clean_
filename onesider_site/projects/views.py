@@ -1,6 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import Project, Category
-from django.db.models import Q, F
+from django.db.models import Q, F, Case, When, IntegerField
 from django.contrib.auth.decorators import login_required
 from purchases.models import Purchase, DownloadToken
 from django.http import HttpResponseForbidden, FileResponse
@@ -12,6 +12,15 @@ from django.conf import settings
 from django.http import JsonResponse
 from django.core.paginator import Paginator
 from django.urls import reverse
+
+STOP_WORDS = {
+    "a", "an", "the",
+    "in", "on", "at",
+    "with", "using",
+    "made", "for",
+    "to", "of", "and",
+    "by", "from", "into"
+}
 
 # Create your views here.
 
@@ -29,6 +38,59 @@ def project_list_api(request):
     category = request.GET.get('category')
     min_price = request.GET.get('min_price')
     max_price = request.GET.get('max_price')
+
+    q = request.GET.get('q', '').strip()
+ 
+    if q:
+
+        words = [
+            word.lower()
+            for word in q.split()
+            if word.lower() not in STOP_WORDS
+        ]
+
+        if not words:
+            return JsonResponse({
+                "projects": [],
+                "has_more": False
+            })
+
+        score = None
+
+        for word in words:
+
+            case = Case(
+                When(
+                    Q(title__icontains=word) |
+                    Q(short_description__icontains=word) |
+                    Q(description__icontains=word) |
+                    Q(tags__name__icontains=word) |
+                    Q(categories__name__icontains=word),
+                    then=1
+                ),
+                default=0,
+                output_field=IntegerField()
+            )
+
+            if score is None:
+                score = case
+            else:
+                score += case
+
+        if len(words) <= 2:
+            minimum_matches = 1
+        elif len(words) <= 4:
+            minimum_matches = 2
+        else:
+            minimum_matches = 3
+
+        projects = (
+            projects
+            .annotate(match_score=score)
+            .filter(match_score__gte=minimum_matches)
+            .order_by('-match_score', '-created_at')
+            .distinct()
+        )
 
     if category:
         projects = projects.filter(
@@ -115,58 +177,6 @@ def project_detail(request, slug):
         'is_saved' : is_saved,
         'tags' : tags
     })
-
-def category_projects(request, category_slug):
-    category = get_object_or_404(Category, slug = category_slug)
-    projects = Project.objects.filter(
-        categories = category,
-        is_active = True,
-    ).order_by('?')
-
-    return render(
-        request,
-        'projects/category_projects.html',
-        {
-            'category' : category,
-            'projects' : projects
-        }
-    )
-
-def project_search(request):
-    q = request.GET.get('q', '').strip()
-
-    categories = Category.objects.all()
-
-    category = request.GET.get('category')
-    min_price = request.GET.get('min_price')
-    max_price = request.GET.get('max_price')
-
-    projects = Project.objects.filter(is_active=True)
-
-    if q:
-        projects = projects.filter(
-            Q(title__icontains=q) |
-            Q(short_description__icontains=q) |
-            Q(description__icontains=q) |
-            Q(tags__name__icontains=q) |
-            Q(categories__name__icontains=q)
-        ).distinct()
-    
-    if category:
-        projects = projects.filter(categories__slug=category)
-
-    if min_price:
-        projects = projects.filter(price__gte=min_price)
-
-    if max_price:
-        projects = projects.filter(price__lte=max_price)
-
-    return render(request, 'projects/project_search.html', {
-        'projects': projects,
-        'q' : q,
-        'selected_category' : category,
-        'categories' : categories,
-        })
 
 @login_required
 @require_POST

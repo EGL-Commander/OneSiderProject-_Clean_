@@ -19,20 +19,25 @@
             </div>
 
             <div class="flex items-center justify-between gap-4 text-[10px] md:text-xs w-full md:w-auto">
+
                 <button id="sticky-top"
                     class="text-xs tracking-widest uppercase transition"
-                    style="color: var(--text-main);"
-                    onmouseover="this.style.color='var(--text-bright)'"
-                    onmouseout="this.style.color='var(--text-main)'">
+                    style="color: var(--text-main);">
                     ↑ Top
                 </button>
+
+                <button id="sticky-clear-search"
+                    class="hidden text-xs tracking-widest uppercase transition"
+                    style="color: var(--text-main);">
+                    Clear Search ✕
+                </button>
+
                 <button id="sticky-advanced"
                     class="text-xs tracking-widest uppercase transition"
-                    style="color: var(--text-main);"
-                    onmouseover="this.style.color='var(--text-bright)'"
-                    onmouseout="this.style.color='var(--text-main)'">
+                    style="color: var(--text-main);">
                     Filters →
                 </button>
+
             </div>
 
         </div>
@@ -85,6 +90,18 @@
 
                 <p id="filter-summary" class="text-[11px] tracking-widest uppercase hidden" style="color: var(--text-main);"></p>
 
+                <div id="search-pill"
+                    class="hidden flex items-center gap-2 text-xs uppercase tracking-widest">
+
+                    <span id="search-text"></span>
+
+                    <button id="clear-search"
+                        class="opacity-50 hover:opacity-100 transition">
+                        ✕
+                    </button>
+
+                </div>
+
             </div>
 
             <!-- Projects Grid -->
@@ -121,7 +138,12 @@
     let draftFilters = createEmptyFilters();
 
     function createEmptyFilters() {
-        return { category: [], min_price: null, max_price: null };
+        return {
+            search: "",
+            category: [],
+            min_price: null,
+            max_price: null
+        };
     }
 
     // ── PAGINATION STATE ──────────────────────────────────────────
@@ -217,8 +239,11 @@
     function updateURL() {
         const params = new URLSearchParams();
         if (filters.category.length > 0) params.set("category", filters.category.join(","));
-        if (filters.min_price !== null) params.set("min", filters.min_price);
-        if (filters.max_price !== null) params.set("max", filters.max_price);
+        if (filters.min_price !== null) params.set("min_price", filters.min_price);
+        if (filters.max_price !== null) params.set("max_price", filters.max_price);
+
+        if (filters.search) params.set("q", filters.search);
+
         const query = params.toString();
         window.history.replaceState({}, "", query ? `${window.location.pathname}?${query}` : window.location.pathname);
     }
@@ -226,11 +251,15 @@
     function loadFromURL() {
         const params = new URLSearchParams(window.location.search);
         const category = params.get("category");
-        const min = params.get("min");
-        const max = params.get("max");
+        const min = params.get("min_price");
+        const max = params.get("max_price");
+        const q = params.get("q");
+
+        filters.search = q || "";
         filters.category = category ? category.split(",") : [];
         filters.min_price = min ? parseFloat(min) : null;
         filters.max_price = max ? parseFloat(max) : null;
+
     }
 
     // ── SYNC UI ───────────────────────────────────────────────────
@@ -265,9 +294,36 @@
         if (advMin) advMin.value = filters.min_price ?? "";
         if (advMax) advMax.value = filters.max_price ?? "";
 
+        const pill = document.getElementById("search-pill");
+        const text = document.getElementById("search-text");
+
+        if (filters.search) {
+            pill.classList.remove("hidden");
+            text.textContent = `Search: "${filters.search}"`;
+        } else {
+            pill.classList.add("hidden");
+        }
+
         updateFilterCount();
         updateFilterSummary();
+
+        const stickyClear = document.getElementById("sticky-clear-search");
+
+        if (stickyClear) {
+            stickyClear.classList.toggle(
+                "hidden",
+                !filters.search
+            );
+        }
     }
+
+    document
+    .getElementById("clear-search")
+    .addEventListener("click", () => {
+
+        clearSearch();
+
+    });
 
     function updateFilterCount(source = filters) {
         let count = source.category.length;
@@ -278,22 +334,38 @@
         ){
             count++;
         }
+
+        if (source.search) {
+
+            count++;
+
+        }
+
         const badge = document.getElementById("filter-count");
         if (count > 0) { badge.textContent = `(${count})`; badge.classList.remove("hidden"); }
         else badge.classList.add("hidden");
     }
 
     function updateFilterSummary(source = filters) {
+
         const summary = [];
+
         if (source.category.length > 0)
             summary.push(source.category.map(c => c.charAt(0).toUpperCase() + c.slice(1)).join(", "));
+
         if (source.min_price !== null && source.max_price !== null)
             summary.push(`₹${source.min_price}–₹${source.max_price}`);
         else if (source.min_price !== null) summary.push(`₹${source.min_price}+`);
         else if (source.max_price !== null) summary.push(`<₹${source.max_price}`);
+
         const el = document.getElementById("filter-summary");
+
+        if (source.search)
+            summary.push(`"${source.search}"`);
+
         if (summary.length === 0) { el.classList.add("hidden"); el.textContent = ""; }
         else { el.classList.remove("hidden"); el.textContent = summary.join(" • "); }
+        
     }
 
     // ── DRAFT FILTERS (advanced panel) ───────────────────────────
@@ -309,7 +381,13 @@
 
     // ── APPLY ADVANCED ────────────────────────────────────────────
     function applyAdvancedFilters() {
+        
+        const currentSearch = filters.search;
+
         filters = structuredClone(draftFilters);
+        
+        filters.search = currentSearch;
+        
         const min = filters.min_price;
         const max = filters.max_price;
 
@@ -341,7 +419,13 @@
 
     // ── RESET FILTERS ─────────────────────────────────────────────
     function resetFilters() {
+
+        const search = filters.search;
+
         filters = createEmptyFilters();
+
+        filters.search = search;
+
         document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
         const allBtn = document.querySelector('[data-category="all"]');
         if (allBtn) allBtn.classList.add("active");
@@ -358,6 +442,8 @@
     async function fetchProjects() {
         const params = new URLSearchParams();
         params.set("page", page);
+
+        if (filters.search) params.set("q", filters.search);
         if (filters.category.length > 0) params.set("category", filters.category[0]);
         if (filters.min_price !== null) params.set("min_price", filters.min_price);
         if (filters.max_price !== null) params.set("max_price", filters.max_price);
@@ -418,12 +504,22 @@
 
                 if (page === 1) {
 
+                    const hasFilters =
+                        filters.search ||
+                        filters.category.length > 0 ||
+                        filters.min_price !== null ||
+                        filters.max_price !== null;
+
+                    const emptyMessage = hasFilters
+                        ? "NO PROJECTS MATCH YOUR FILTERS"
+                        : "NO PROJECTS YET";
+
                     grid.innerHTML = `
                         <div class="col-span-full flex flex-col items-center justify-center text-center py-20">
                             <div class="text-4xl mb-4 opacity-40">∅</div>
                             <p class="text-sm tracking-widest mb-4"
                             style="color: var(--text-main);">
-                                NO PROJECTS YET
+                                ${emptyMessage}
                             </p>
 
                             <button onclick="resetFilters()"
@@ -530,10 +626,43 @@
             `<button id="load-more-btn" class="btn-premium px-10 py-3 text-xs tracking-widest uppercase">Load More</button>`;
     }
 
+    function clearSearch() {
+
+        filters.search = "";
+
+        updateURL();
+        syncUIWithFilters();
+        resetState();
+        loadMore();
+
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                const grid = document.getElementById("projects-grid");
+
+                window.scrollTo({
+                    top:
+                        grid.getBoundingClientRect().top +
+                        window.scrollY -
+                        getScrollOffset(),
+                    behavior: "smooth"
+                });
+            });
+        });
+
+    }
+
     // ── CONTROLS ──────────────────────────────────────────────────
     document.getElementById("clear-filters").onclick = () => { resetFilters(); toast("Filters Cleared"); };
     document.getElementById("open-advanced").onclick = openAdvanced;
     document.getElementById("retry-btn").onclick = () => { hideError(); resetState(); loadMore(); };
+
+    document
+        .getElementById("sticky-clear-search")
+        ?.addEventListener("click", () => {
+
+            clearSearch();
+
+        });
 
     // ── INIT ──────────────────────────────────────────────────────
     function init() {
@@ -541,6 +670,13 @@
         syncUIWithFilters();
         resetState();
         loadMore();
+
+        document.getElementById("desktop-search").value =
+            filters.search;
+
+        document.getElementById("mobile-search").value =
+            filters.search;
+
     }
 
     document.addEventListener("DOMContentLoaded", init);

@@ -9,6 +9,9 @@
         position: relative;
         overflow: hidden;
 
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+
         border: 1px solid var(--border);
         border-radius: 8px;
 
@@ -54,6 +57,9 @@
 
     .btn-cancel:active {
         transform: scale(0.97);
+
+        color: #ffb3b3;
+        border-color: rgba(180, 40, 40, 0.7);
 
         background: rgba(180, 40, 40, 0.12);
 
@@ -102,7 +108,7 @@
             <form method="post" class="flex-1">
                 {% csrf_token %}
 
-                <button type="submit"
+                <button id="download-btn" type="submit"
                         class="btn-premium w-full py-3 text-xs tracking-widest uppercase">
                     Proceed to Download
                 </button>
@@ -110,7 +116,7 @@
             </form>
 
             <button type="button"
-                    onclick="history.back()"
+                    onclick="window.location.href='{% url 'project_detail' project.slug %}'"
                     class="btn-cancel flex-1 py-3 text-xs tracking-widest uppercase">
                 Cancel
             </button>
@@ -120,5 +126,27 @@
     </div>
 
 </section>
+
+{% endblock %}
+
+{% block scripts %}
+
+<script>
+
+    document.querySelector("form")?.addEventListener(
+        "submit",
+        () => {
+
+            const btn =
+                document.getElementById("download-btn");
+
+            btn.disabled = true;
+
+            btn.innerText = "Generating Link...";
+
+        }
+    );
+
+</script>
 
 {% endblock %}
