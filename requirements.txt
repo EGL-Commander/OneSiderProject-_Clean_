@@ -18,6 +18,7 @@ pyasn1==0.6.2
 pyasn1_modules==0.4.2
 pycparser==3.0
 pyparsing==3.3.2
+razorpay==2.0.1
 requests==2.32.5
 rsa==4.9.1
 sqlparse==0.5.4
