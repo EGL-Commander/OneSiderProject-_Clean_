@@ -25,6 +25,20 @@ class Purchase(models.Model):
         related_name='purchases'
     )
 
+    razorpay_order_id = models.CharField(
+        max_length=100,
+        unique=True,
+        null=True,
+        blank=True
+    )
+
+    razorpay_payment_id = models.CharField(
+        max_length=100,
+        unique=True,
+        null=True,
+        blank=True
+    )
+
     status = models.CharField(
         max_length=10,
         choices = STATUS_CHOICES,

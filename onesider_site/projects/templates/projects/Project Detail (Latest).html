@@ -2,6 +2,12 @@
 
 {% block title %}{{ project.title }} — OneSider{% endblock %}
 
+{% block head %}
+    {{ block.super }}
+
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+{% endblock %}
+
 {% block content %}
 
     <section class="min-h-screen pt-32 pb-20 px-6" id="project_detail">
@@ -102,7 +108,7 @@
                                 <form
                                     id="purchase-form"
                                     method="post"
-                                    action="{% url 'buy_project' project.slug %}"
+                                    action="{% url 'create_order' project.slug %}"
                                 >
                                     {% csrf_token %}
 
@@ -249,69 +255,110 @@
 
     if (purchaseForm) {
 
-        purchaseForm.addEventListener(
-            "submit",
-            async (e) => {
+        purchaseForm.addEventListener("submit", async (e) => {
 
-                e.preventDefault();
+            e.preventDefault();
 
-                const btn =
-                    document.getElementById(
-                        "purchase-btn"
-                    );
+            const btn = document.getElementById("purchase-btn");
 
-                btn.disabled = true;
-                btn.innerText = "Processing...";
+            btn.disabled = true;
+            btn.innerText = "Processing...";
+
+            const csrfToken =
+                purchaseForm.querySelector(
+                    "[name=csrfmiddlewaretoken]"
+                ).value;
+
+            try {
 
                 const response = await fetch(
                     purchaseForm.action,
                     {
                         method: "POST",
                         headers: {
-                            "X-CSRFToken":
-                                purchaseForm.querySelector(
-                                    "[name=csrfmiddlewaretoken]"
-                                ).value
+                            "X-CSRFToken": csrfToken
                         }
                     }
                 );
 
+                const responseText = await response.text();
+
+                console.log("STATUS:", response.status);
+                console.log("SERVER RESPONSE:", responseText);
+
                 if (!response.ok) {
-
-                    toast(
-                        "Purchase failed"
+                    throw new Error(
+                        `Server error ${response.status}`
                     );
-
-                    btn.disabled = false;
-                    btn.innerText =
-                        `Acquire Asset — ₹${btn.dataset.price}`;
-
-                    return;
                 }
 
-                const data =
-                    await response.json();
+                const data = JSON.parse(responseText);
 
-                document.getElementById(
-                    "purchase-count"
-                ).innerText =
-                    `${data.purchases_count} Purchases`;
+                const options = {
 
-                document.getElementById(
-                    "purchase-area"
-                ).innerHTML = `
-                    <a href="${data.download_url}"
-                        class="btn-premium w-full py-4 text-xs tracking-widest font-bold uppercase text-center block">
-                        Download Asset
-                    </a>
-                `;
+                    key: data.key_id,
 
-                toast(
-                    "Asset acquired successfully"
-                );
+                    amount: data.amount,
+
+                    currency: data.currency,
+
+                    name: "OneSider",
+
+                    description: data.project_title,
+
+                    order_id: data.order_id,
+
+                    handler: function (response) {
+
+                        console.log(
+                            "Payment successful:",
+                            response
+                        );
+
+                        toast(
+                            "Payment received. Verifying..."
+                        );
+
+                    },
+
+                    modal: {
+
+                        ondismiss: function () {
+
+                            btn.disabled = false;
+
+                            btn.innerText =
+                                `Acquire Asset — ₹${btn.dataset.price}`;
+
+                        }
+
+                    },
+
+                    theme: {
+                        color: "#8a2be2"
+                    }
+
+                };
+
+                const razorpay =
+                    new Razorpay(options);
+
+                razorpay.open();
+
+            } catch (error) {
+
+                console.error(error);
+
+                toast(error.message);
+
+                btn.disabled = false;
+
+                btn.innerText =
+                    `Acquire Asset — ₹${btn.dataset.price}`;
 
             }
-        );
+
+        });
 
     }
 
