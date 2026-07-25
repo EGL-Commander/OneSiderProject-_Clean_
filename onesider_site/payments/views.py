@@ -65,3 +65,101 @@ def create_order(request, slug):
         'project_title': project.title,
         'purchase_id': purchase.id,
     })
+
+@login_required
+@require_POST
+def verify_payment(request):
+
+    razorpay_payment_id = request.POST.get(
+        'razorpay_payment_id'
+    )
+
+    razorpay_order_id = request.POST.get(
+        'razorpay_order_id'
+    )
+
+    razorpay_signature = request.POST.get(
+        'razorpay_signature'
+    )
+
+    purchase_id = request.POST.get(
+        'purchase_id'
+    )
+
+    if not all([
+        razorpay_payment_id,
+        razorpay_order_id,
+        razorpay_signature,
+        purchase_id
+    ]):
+
+        return JsonResponse(
+            {
+                'error':
+                    'Missing payment information.'
+            },
+            status=400
+        )
+
+    purchase = get_object_or_404(
+        Purchase,
+        id=purchase_id,
+        user=request.user
+    )
+
+    # Make sure this payment belongs
+    # to the order we created
+    if purchase.razorpay_order_id != (
+        razorpay_order_id
+    ):
+
+        return JsonResponse(
+            {
+                'error':
+                    'Order mismatch.'
+            },
+            status=400
+        )
+
+    try:
+
+        client.utility.verify_payment_signature({
+
+            'razorpay_order_id':
+                razorpay_order_id,
+
+            'razorpay_payment_id':
+                razorpay_payment_id,
+
+            'razorpay_signature':
+                razorpay_signature
+
+        })
+
+    except Exception:
+
+        return JsonResponse(
+            {
+                'error':
+                    'Payment verification failed.'
+            },
+            status=400
+        )
+
+    purchase.status = 'success'
+
+    purchase.razorpay_payment_id = (
+        razorpay_payment_id
+    )
+
+    purchase.save()
+
+    return JsonResponse({
+
+        'success': True,
+
+        'download_url':
+            f'/projects/download/'
+            f'{purchase.project.slug}/'
+
+    })

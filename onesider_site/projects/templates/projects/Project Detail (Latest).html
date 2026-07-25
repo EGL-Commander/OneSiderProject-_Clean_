@@ -308,16 +308,106 @@
 
                     order_id: data.order_id,
 
-                    handler: function (response) {
-
-                        console.log(
-                            "Payment successful:",
-                            response
-                        );
+                    handler: async function (response) {
 
                         toast(
                             "Payment received. Verifying..."
                         );
+
+                        const formData = new FormData();
+
+                        formData.append(
+                            "razorpay_payment_id",
+                            response.razorpay_payment_id
+                        );
+
+                        formData.append(
+                            "razorpay_order_id",
+                            response.razorpay_order_id
+                        );
+
+                        formData.append(
+                            "razorpay_signature",
+                            response.razorpay_signature
+                        );
+
+                        formData.append(
+                            "purchase_id",
+                            data.purchase_id
+                        );
+
+                        formData.append(
+                            "csrfmiddlewaretoken",
+                            csrfToken
+                        );
+
+                        try {
+
+                            const verifyResponse =
+                                await fetch(
+                                    "{% url 'verify_payment' %}",
+                                    {
+                                        method: "POST",
+                                        body: formData
+                                    }
+                                );
+
+                            const verifyData =
+                                await verifyResponse.json();
+
+                            if (!verifyResponse.ok) {
+
+                                throw new Error(
+                                    verifyData.error ||
+                                    "Payment verification failed."
+                                );
+
+                            }
+
+                            document.getElementById(
+                                "purchase-area"
+                            ).innerHTML = `
+
+                                <a href="${verifyData.download_url}"
+                                    class="btn-premium w-full py-4 text-xs tracking-widest font-bold uppercase text-center block">
+
+                                    Download Asset
+
+                                </a>
+
+                            `;
+
+                            const purchaseCount =
+                                document.getElementById(
+                                    "purchase-count"
+                                );
+
+                            const currentCount =
+                                parseInt(
+                                    purchaseCount.innerText
+                                );
+
+                            purchaseCount.innerText =
+                                `${currentCount + 1} Purchases`;
+
+                            toast(
+                                "Asset acquired successfully!"
+                            );
+
+                        } catch (error) {
+
+                            console.error(error);
+
+                            toast(
+                                error.message
+                            );
+
+                            btn.disabled = false;
+
+                            btn.innerText =
+                                `Acquire Asset — ₹${btn.dataset.price}`;
+
+                        }
 
                     },
 

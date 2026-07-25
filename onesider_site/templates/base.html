@@ -797,23 +797,54 @@
         }
 
         document.addEventListener("click", (e) => {
+
+            if (!(e.target instanceof Element))
+                return;
+
             const btn = e.target.closest("[data-toast]");
-            if (btn && btn.dataset.toast) toast(btn.dataset.toast);
+
+            if (btn && btn.dataset.toast)
+                toast(btn.dataset.toast);
+
         });
         // ──────────────────────────────────────────────────────────
 
         // ── MAGNETIC BUTTONS (delegated — works for dynamic too) ──
+
         document.addEventListener('mousemove', (e) => {
+
+            if (!(e.target instanceof Element))
+                return;
+
             const btn = e.target.closest('.btn-premium');
-            if (!btn) return;
+
+            if (!btn)
+                return;
+
             const rect = btn.getBoundingClientRect();
-            btn.style.transform = `translate(${(e.clientX - rect.left - rect.width / 2) * 0.08}px, ${(e.clientY - rect.top - rect.height / 2) * 0.08}px)`;
+
+            btn.style.transform =
+                `translate(${
+                    (e.clientX - rect.left - rect.width / 2) * 0.08
+                }px, ${
+                    (e.clientY - rect.top - rect.height / 2) * 0.08
+                }px)`;
+
         });
 
         document.addEventListener('mouseleave', (e) => {
+
+            if (!(e.target instanceof Element))
+                return;
+
             const btn = e.target.closest('.btn-premium');
-            if (btn) btn.style.transform = 'translate(0,0)';
+
+            if (btn)
+                btn.style.transform = 'translate(0,0)';
+
         }, true);
+
+        // ──────────────────────────────────────────────────────────
         // ──────────────────────────────────────────────────────────
 
         // ── SMOOTH ANCHOR SCROLL ──────────────────────────────────
