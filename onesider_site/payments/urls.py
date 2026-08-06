@@ -15,4 +15,10 @@ urlpatterns = [
         name='verify_payment'
     ),
 
+    path(
+        "success/",
+        views.payment_success,
+        name="payment_success"
+    ),
+
 ]

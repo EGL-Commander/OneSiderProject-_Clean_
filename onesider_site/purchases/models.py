@@ -39,6 +39,13 @@ class Purchase(models.Model):
         blank=True
     )
 
+    razorpay_payment_link_id = models.CharField(
+        max_length=100,
+        unique=True,
+        null=True,
+        blank=True
+    )
+
     status = models.CharField(
         max_length=10,
         choices = STATUS_CHOICES,
