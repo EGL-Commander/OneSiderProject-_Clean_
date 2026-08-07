@@ -72,3 +72,23 @@ def register_view(request):
             "form": form
         }
     )
+
+@login_required
+def library_view(request):
+
+    purchased_projects = (
+        Project.objects.filter(
+            purchases__user=request.user,
+            purchases__status="success"
+        )
+        .prefetch_related("categories")
+        .distinct()
+    )
+
+    return render(
+        request,
+        "accounts/Library.html",
+        {
+            "purchased_projects": purchased_projects,
+        }
+    )

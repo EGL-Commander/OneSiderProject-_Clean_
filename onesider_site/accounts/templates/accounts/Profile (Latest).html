@@ -137,90 +137,10 @@
 
         {% endif %}
 
-        <!-- Purchased Projects -->
-        <div class="flex items-center gap-6 mb-10">
-            <h2 class="text-xs uppercase tracking-[0.3em] font-medium"
-                style="color: var(--text-bright);">
-                Purchased Projects
-            </h2>
-
-            <div class="h-[1px] flex-1"
-                style="background: var(--border);">
-            </div>
-        </div>
-
-        {% if purchased_projects %}
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-
-                {% for project in purchased_projects %}
-
-                    <a href="{% url 'project_detail' project.slug %}"
-                       class="card-container block">
-
-                        <div class="aspect-[16/10] card-image-wrap relative"
-                             style="background: var(--bg-deep);">
-
-                            {% if project.thumbnail %}
-                                <img
-                                    src="{{ project.thumbnail.url }}"
-                                    alt="{{ project.title }}"
-                                    class="w-full h-full object-cover opacity-0 transition-opacity duration-500"
-                                >
-                            {% endif %}
-
-                            <div
-                                class="absolute top-3 right-3 px-3 py-1 rounded-full text-[10px] uppercase tracking-widest"
-                                style="
-                                    background: rgba(var(--accent-rgb), 0.15);
-                                    color: var(--text-bright);
-                                    border: 1px solid rgba(var(--accent-rgb), 0.35);
-                                "
-                            >
-                                Owned
-                            </div>
-
-                        </div>
-
-                        <div class="p-6">
-
-                            <h3 class="text-base font-medium mb-2"
-                                style="color: var(--text-bright);">
-                                {{ project.title }}
-                            </h3>
-
-                            <p class="text-xs"
-                               style="color: var(--text-main);">
-                                {{ project.short_description }}
-                            </p>
-
-                            <p class="text-xs mt-3"
-                               style="color: var(--text-main);">
-                                ₹{{ project.price }}
-                            </p>
-
-                        </div>
-
-                    </a>
-
-                {% endfor %}
-
-            </div>
-
-        {% else %}
-
-            <div class="card-container p-12 text-center">
-
-                <div class="text-4xl opacity-40 mb-4">∅</div>
-
-                <p class="text-xs tracking-widest uppercase"
-                   style="color: var(--text-main);">
-                    No Purchased Projects Yet
-                </p>
-
-            </div>
-
-        {% endif %}
+        <a href="{% url 'library' %}"
+        class="btn-premium inline-block px-6 py-3 text-xs tracking-widest uppercase mt-4">
+            Open Library
+        </a>
 
     </div>
 
