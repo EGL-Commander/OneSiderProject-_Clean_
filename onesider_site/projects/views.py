@@ -200,34 +200,6 @@ def toggle_save(request, slug):
     })
 
 @login_required
-@require_POST
-def buy_project(request, slug):
-    project = get_object_or_404(Project, slug=slug, is_active=True)
-    user = request.user
-
-    purchase, created = Purchase.objects.get_or_create(
-        user=user,
-        project=project,
-        defaults={'status': 'success'}
-    )
-
-    if not created and purchase.status != 'success':
-        purchase.status = 'success'
-        purchase.save(update_fields=['status'])
-
-    true_count = project.purchases.filter(status='success').count()
-    Project.objects.filter(pk=project.pk).update(purchases_count=true_count)
-
-    return JsonResponse({
-        "success" : True,
-        "purchases_count" : true_count,
-        "download_url" : reverse(
-            "download_project", 
-            args=[project.slug]
-        )
-    })
-
-@login_required
 @require_http_methods(['GET', 'POST'])
 def download_project(request, slug):
     project = get_object_or_404(Project, slug=slug, is_active=True)

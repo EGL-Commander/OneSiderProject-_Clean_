@@ -28,7 +28,9 @@ SECRET_KEY = '***REMOVED***'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '10.215.21.52', 'gerbil-union-plethora.ngrok-free.dev']
+# ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '10.219.48.52']
+
+ALLOWED_HOSTS = ['*']
 
 CSRF_TRUSTED_ORIGINS = ['https://gerbil-union-plethora.ngrok-free.dev']
 
