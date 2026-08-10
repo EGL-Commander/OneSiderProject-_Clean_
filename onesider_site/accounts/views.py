@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth import login
 from .forms import ProfileUpdateForm
 from projects.models import Project
 from .forms import RegisterForm
@@ -62,9 +63,11 @@ def register_view(request):
 
         if form.is_valid():
 
-            form.save()
+            user = form.save()
 
-            return redirect("login")
+            login(request, user)
+
+            return redirect("project_list")
 
     else:
 

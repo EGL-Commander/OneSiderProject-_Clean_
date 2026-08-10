@@ -48,6 +48,9 @@ INSTALLED_APPS = [
     'accounts.apps.AccountsConfig',
     'purchases',
     'payments',
+
+    'cloudinary',
+    'cloudinary_storage',
 ]
 
 MIDDLEWARE = [
@@ -150,3 +153,18 @@ GOOGLE_DRIVE_CREDENTIALS_PATH = BASE_DIR / 'secrets' / 'gdrive_credentials.json'
 RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID")
 
 RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET")
+
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': os.getenv("CLOUDINARY_CLOUD_NAME"),
+    'API_KEY': os.getenv("CLOUDINARY_API_KEY"),
+    'API_SECRET': os.getenv("CLOUDINARY_API_SECRET"),
+}
+
+STORAGES = {
+    'default': {
+        'BACKEND': "cloudinary_storage.storage.MediaCloudinaryStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
