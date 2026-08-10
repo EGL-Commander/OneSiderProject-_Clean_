@@ -84,8 +84,8 @@
                     <a href="{% url 'project_detail' project.slug %}"
                        class="card-container block">
 
-                        <div class="aspect-[16/10] card-image-wrap"
-                             style="background: var(--bg-deep);">
+                        <div class="aspect-[16/10] card-image-wrap relative"
+                            style="background: var(--bg-deep);">
 
                             {% if project.thumbnail %}
                                 <img
@@ -93,6 +93,19 @@
                                     alt="{{ project.title }}"
                                     class="w-full h-full object-cover opacity-0 transition-opacity duration-500"
                                 >
+                            {% endif %}
+
+                            {% if project.id in owned_project_ids %}
+                                <div
+                                    class="absolute top-3 right-3 px-3 py-1 rounded-full text-[10px] uppercase tracking-widest"
+                                    style="
+                                        background: rgba(var(--accent-rgb), 0.15);
+                                        color: var(--text-bright);
+                                        border: 1px solid rgba(var(--accent-rgb), 0.35);
+                                    "
+                                >
+                                    Owned
+                                </div>
                             {% endif %}
 
                         </div>

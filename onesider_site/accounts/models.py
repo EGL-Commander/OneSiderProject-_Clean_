@@ -20,12 +20,6 @@ class Profile(models.Model):
     )
     display_name = models.CharField(max_length=50)
 
-    purchased_projects = models.ManyToManyField(
-        Project,
-        related_name='buyers',
-        blank=True
-    )
-
     saved_projects = models.ManyToManyField(
         Project,
         related_name='saved_by',

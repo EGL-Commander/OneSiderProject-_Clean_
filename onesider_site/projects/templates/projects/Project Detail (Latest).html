@@ -4,8 +4,6 @@
 
 {% block head %}
     {{ block.super }}
-
-    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 {% endblock %}
 
 {% block content %}
@@ -42,13 +40,26 @@
                         {% endfor %}
                     </p>
 
-                    <h1 class="text-4xl md:text-5xl font-light tracking-wide mb-6" style="color: var(--text-bright);">
+                    <h1 class="text-4xl md:text-5xl font-light tracking-wide mb-6"
+                        style="color: var(--text-bright);">
                         {{ project.title }}
                     </h1>
 
-                    <p class="text-sm leading-relaxed mb-10" style="color: var(--text-main);">
+                    <!-- Short Description -->
+                    <p class="text-sm leading-relaxed mb-8" style="color: var(--text-main);">
                         {{ project.short_description }}
                     </p>
+
+                    <!-- Full Description -->
+                    <div class="border-t pt-8 mb-10"
+                        style="border-color: var(--border);">
+
+                        <div class="text-sm leading-relaxed space-y-6"
+                            style="color: var(--text-main);">
+                            {{ project.description|linebreaksbr }}
+                        </div>
+
+                    </div>
 
                     <!-- Tags -->
                     {% if tags %}
@@ -63,10 +74,11 @@
                     {% endif %}
 
                     <!-- Stats row -->
-                    <div class="flex gap-8 mb-10 text-[11px] tracking-widest uppercase" style="color: var(--text-main);">
+                    <div class="flex gap-8 mb-10 text-[11px] tracking-widest uppercase"
+                        style="color: var(--text-main);">
                         <span>{{ project.views_count }} Views</span>
-                        <span id = "purchase-count">{{ project.purchases_count }} Purchases</span>
-                        <span id = "save-count">{{ project.saves_count }} Saves</span>
+                        <span id="purchase-count">{{ project.purchases_count }} Purchases</span>
+                        <span id="save-count">{{ project.saves_count }} Saves</span>
                     </div>
 
                 </div>
@@ -108,22 +120,31 @@
                         </div>
 
                         <!-- Save / Unsave toggle -->
-                        <form id = "save-form" method="post" action="{% url 'toggle_save' project.slug %}">
+                        <form id="save-form"
+                            method="post"
+                            action="{% url 'toggle_save' project.slug %}">
+
                             {% csrf_token %}
-                            <button id = "save-btn" type="submit"
+
+                            <button id="save-btn"
+                                type="submit"
                                 class="block w-full text-center text-xs tracking-widest uppercase transition py-2"
                                 style="color: var(--text-main);"
                                 onmouseover="this.style.color='var(--text-bright)'"
                                 onmouseout="this.style.color='var(--text-main)'">
+
                                 {% if is_saved %}
                                     ♥ Saved
                                 {% else %}
                                     ♡ Save for Later
                                 {% endif %}
+
                             </button>
+
                         </form>
 
                     {% else %}
+
                         <!-- Not logged in -->
                         <a href="{% url 'login' %}?next={{ request.path }}"
                             class="btn-premium w-full py-4 text-xs tracking-widest font-bold uppercase text-center block">
@@ -137,6 +158,7 @@
                             onmouseout="this.style.color='var(--text-main)'">
                             ♡ Login to Save
                         </a>
+
                     {% endif %}
 
                     <a href="{% url 'project_list' %}"
@@ -153,11 +175,6 @@
 
         </div>
 
-        <!-- Full Description -->
-        <div class="max-w-4xl mx-auto mt-24 text-sm leading-relaxed space-y-6" style="color: var(--text-main);">
-            {{ project.description|linebreaksbr }}
-        </div>
-
     </section>
 
 {% endblock %}
@@ -167,13 +184,18 @@
 
     // Fade in hero image once loaded
     const heroImg = document.getElementById("project-hero-img");
+
     if (heroImg) {
+
         if (heroImg.complete) {
             heroImg.classList.remove("opacity-0");
         } else {
-            heroImg.onload = () => heroImg.classList.remove("opacity-0");
+            heroImg.onload = () =>
+                heroImg.classList.remove("opacity-0");
         }
+
     }
+
 
     const saveForm = document.getElementById("save-form");
 
@@ -231,6 +253,7 @@
 
     }
 
+
     const purchaseForm = document.getElementById("purchase-form");
 
     if (purchaseForm) {
@@ -239,7 +262,8 @@
 
             e.preventDefault();
 
-            const btn = document.getElementById("purchase-btn");
+            const btn =
+                document.getElementById("purchase-btn");
 
             btn.disabled = true;
             btn.innerText = "Processing...";
@@ -261,20 +285,32 @@
                     }
                 );
 
-                const responseText = await response.text();
+                const responseText =
+                    await response.text();
 
-                console.log("STATUS:", response.status);
-                console.log("SERVER RESPONSE:", responseText);
+                console.log(
+                    "STATUS:",
+                    response.status
+                );
+
+                console.log(
+                    "SERVER RESPONSE:",
+                    responseText
+                );
 
                 if (!response.ok) {
+
                     throw new Error(
                         `Server error ${response.status}`
                     );
+
                 }
 
-                const data = JSON.parse(responseText);
+                const data =
+                    JSON.parse(responseText);
 
-                window.location.href = data.payment_url;
+                window.location.href =
+                    data.payment_url;
 
             } catch (error) {
 

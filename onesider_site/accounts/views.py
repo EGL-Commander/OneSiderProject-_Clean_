@@ -25,6 +25,10 @@ def profile_view(request):
         .distinct()
     )
 
+    owned_project_ids = set(
+        purchased_projects.values_list('id', flat=True)
+    )
+
     return render(
         request,
         "accounts/Profile (Latest).html",
@@ -32,6 +36,7 @@ def profile_view(request):
             "profile": profile,
             "saved_projects": saved_projects,
             "purchased_projects": purchased_projects,
+            "owned_project_ids": owned_project_ids,
         }
     )
 

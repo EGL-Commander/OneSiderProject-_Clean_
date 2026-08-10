@@ -4,6 +4,7 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.db import transaction
 from django.conf import settings
+from django.db.models import F
 
 from projects.models import Project
 from purchases.models import Purchase
@@ -160,6 +161,12 @@ def payment_success(request):
     purchase.razorpay_payment_id = payment_id
 
     purchase.save()
+
+    Project.objects.filter(
+        pk=purchase.project.pk
+    ).update(
+        purchases_count=F('purchases_count') + 1
+    )
 
     return redirect(
         "project_detail",

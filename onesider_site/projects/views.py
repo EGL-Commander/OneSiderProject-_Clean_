@@ -237,10 +237,11 @@ def download_project(request, slug):
 
 @login_required
 def download_with_token(request, token):
-    token_obj = get_object_or_404(DownloadToken, token=token)
-
-    if token_obj.user != request.user:
-        return HttpResponseForbidden("Invalid token.")
+    token_obj = get_object_or_404(
+        DownloadToken,
+        token=token,
+        user=request.user
+        )
 
     if not token_obj.is_valid():
         return HttpResponseForbidden("Token expired or already used.")
