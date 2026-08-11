@@ -129,12 +129,17 @@
             filter: grayscale(100%);
             opacity: 0.4;
         }
+
+        [data-theme="light"] .card-image-wrap img {
+            opacity: 0.85;
+            filter: grayscale(40%);
+        }
+
         .card-container:hover img {
             transform: scale(1.05);
-            filter: grayscale(0%);
-            opacity: 1;
+            filter: grayscale(0%) !important;
+            opacity: 1 !important;
         }
-        [data-theme="light"] .card-image-wrap img { opacity: 0.55; }
         .card-container:active { transform: translateY(-4px) scale(0.97); }
 
         /* Scrollbar */

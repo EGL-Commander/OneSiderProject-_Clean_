@@ -25,7 +25,7 @@ STOP_WORDS = {
 # Create your views here.
 
 def project_list(request):
-    categories = Category.objects.all()
+    categories = Category.objects.all()[:3]
 
     return render(request, 'projects/Gallery Project List (Latest).html', {'categories' : categories})
 

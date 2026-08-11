@@ -129,7 +129,7 @@
                 Need access?
 
                 <a
-                    href="{% url 'register' %}"
+                    href="{% url 'register' %}?next={{ request.GET.next }}"
                     class="ml-2 transition"
                     style="color: var(--text-bright);">
 

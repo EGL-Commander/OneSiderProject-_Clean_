@@ -42,6 +42,8 @@
 
             {% csrf_token %}
 
+            <input type="hidden" name="next" value="{{ next }}">
+
             <div>
                 <label
                     class="block text-xs uppercase tracking-widest mb-2"

@@ -681,5 +681,30 @@
 
     document.addEventListener("DOMContentLoaded", init);
 
+    // ── DYNAMIC ADV CHIPS ────────────────────────────────────────
+    // Render real category chips from Django into the advanced panel
+    (function buildAdvChips() {
+        const categories = [
+            {% for category in categories %}
+                { name: "{{ category.name }}", value: "{{ category.slug }}" },
+            {% endfor %}
+        ];
+
+        const container = document.querySelector("#advanced-filters-page .flex.flex-wrap.gap-3");
+        if (!container || categories.length === 0) return;
+
+        container.innerHTML = categories.map(cat =>
+            `<button class="adv-chip" data-filter="category" data-value="${cat.value}">${cat.name}</button>`
+        ).join("");
+
+        // Re-attach click listeners after rendering
+        container.querySelectorAll(".adv-chip").forEach(chip => {
+            chip.addEventListener("click", () => {
+                chip.classList.toggle("active");
+                if (typeof syncDraftFilters === "function") syncDraftFilters();
+            });
+        });
+    })();
+
 </script>
 {% endblock %}

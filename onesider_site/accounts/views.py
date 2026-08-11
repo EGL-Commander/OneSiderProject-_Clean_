@@ -67,7 +67,9 @@ def register_view(request):
 
             login(request, user)
 
-            return redirect("project_list")
+            next_url = request.POST.get("next") or request.GET.get("next") or "project_list"
+
+            return redirect(next_url)
 
     else:
 
@@ -77,7 +79,8 @@ def register_view(request):
         request,
         "accounts/Register.html",
         {
-            "form": form
+            "form": form,
+            "next": request.GET.get("next", "")
         }
     )
 
