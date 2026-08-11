@@ -138,7 +138,10 @@ def project_list_api(request):
 def project_detail(request, slug):
     project = get_object_or_404(
         Project.objects.prefetch_related(
-            'categories', 'tags'),
+            'categories',
+            'tags',
+            'additional_media'
+            ),
         slug=slug,
         is_active=True
     )
