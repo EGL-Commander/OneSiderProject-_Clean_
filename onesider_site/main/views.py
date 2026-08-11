@@ -17,3 +17,16 @@ def home(request):
 	}
 
 	return render(request, 'main/Home (Latest).html', context)
+
+def terms_and_conditions(request):
+    return render(
+        request,
+        'main/Terms and Conditions.html'
+    )
+
+
+def privacy_policy(request):
+    return render(
+        request,
+        'main/Privacy Policy.html'
+    )
