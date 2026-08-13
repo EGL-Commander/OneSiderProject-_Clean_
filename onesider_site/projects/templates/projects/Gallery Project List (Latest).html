@@ -391,7 +391,7 @@
         params.set("page", 1);
 
         if (filters.search) params.set("q", filters.search);
-        if (draftState.category.length > 0) params.set("category", draftState.category[0]);
+        if (draftState.category.length > 0) params.set("category", draftState.category.join(","));
         if (draftState.min_price !== null) params.set("min_price", draftState.min_price);
         if (draftState.max_price !== null) params.set("max_price", draftState.max_price);
 
@@ -475,7 +475,7 @@
         params.set("page", page);
 
         if (filters.search) params.set("q", filters.search);
-        if (filters.category.length > 0) params.set("category", filters.category[0]);
+        if (filters.category.length > 0) params.set("category", filters.category.join(","));
         if (filters.min_price !== null) params.set("min_price", filters.min_price);
         if (filters.max_price !== null) params.set("max_price", filters.max_price);
 

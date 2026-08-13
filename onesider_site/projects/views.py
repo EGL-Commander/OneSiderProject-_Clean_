@@ -101,8 +101,9 @@ def project_list_api(request):
         )
 
     if category:
+        category_slugs = [c.strip() for c in category.split(",") if c.strip()]
         projects = projects.filter(
-            categories__slug=category
+            categories__slug__in=category_slugs
         )
 
     if min_price:
