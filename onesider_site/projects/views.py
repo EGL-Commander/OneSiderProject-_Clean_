@@ -132,7 +132,8 @@ def project_list_api(request):
 
     return JsonResponse({
         "projects": data,
-        "has_more": page_obj.has_next()
+        "has_more": page_obj.has_next(),
+        "total": paginator.count
     })
 
 def project_detail(request, slug):

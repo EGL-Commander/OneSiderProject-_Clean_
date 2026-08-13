@@ -377,7 +377,38 @@
         draftFilters.max_price = max ? parseFloat(max) : null;
         updateFilterSummary(draftFilters);
         updateFilterCount(draftFilters);
+        updateLiveResults(draftFilters);
     }
+
+    // ── LIVE RESULT COUNT ────────────────────────────────────────
+    // Shows how many projects match the filters currently being drafted
+    // in the Advanced Filters panel, before the user hits "Apply".
+    const updateLiveResults = debounce(async (draftState) => {
+        const liveResultsEl = document.getElementById("live-results");
+        if (!liveResultsEl) return;
+
+        const params = new URLSearchParams();
+        params.set("page", 1);
+
+        if (filters.search) params.set("q", filters.search);
+        if (draftState.category.length > 0) params.set("category", draftState.category[0]);
+        if (draftState.min_price !== null) params.set("min_price", draftState.min_price);
+        if (draftState.max_price !== null) params.set("max_price", draftState.max_price);
+
+        liveResultsEl.textContent = "Counting...";
+
+        try {
+            const response = await fetch(`/projects/api/?${params.toString()}`, {
+                headers: { "X-Requested-With": "XMLHttpRequest" }
+            });
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const data = await response.json();
+            const total = data.total ?? 0;
+            liveResultsEl.textContent = total === 1 ? "1 Result Matches" : `${total} Results Match`;
+        } catch (err) {
+            liveResultsEl.textContent = "0 Results Match";
+        }
+    }, 200);
 
     // ── APPLY ADVANCED ────────────────────────────────────────────
     function applyAdvancedFilters() {
@@ -457,13 +488,13 @@
     }
 
     // ── LOAD MORE / PAGINATION ────────────────────────────────────
-    window.addEventListener("scroll", () => {
+    window.addEventListener("scroll", debounce(() => {
         if (loading || !hasMore || autoLoads >= maxAutoLoads) return;
         if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 200) {
             autoLoads++;
             loadMore();
         }
-    });
+    }, 80));
 
     function showError() {
         document.getElementById("projects-grid").style.display = "none";
