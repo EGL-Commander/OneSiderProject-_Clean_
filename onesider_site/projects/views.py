@@ -25,14 +25,12 @@ STOP_WORDS = {
 # Create your views here.
 
 def project_list(request):
-    categories = Category.objects.all()[:3]
     all_categories = Category.objects.all()
 
     return render(
         request,
         'projects/Gallery Project List (Latest).html',
         {
-            'categories': categories,
             'all_categories': all_categories,
         }
     )
@@ -41,11 +39,21 @@ def project_list_api(request):
 
     projects = Project.objects.filter(
         is_active=True
-    ).order_by('-created_at')
+    )
 
     category = request.GET.get('category')
     min_price = request.GET.get('min_price')
     max_price = request.GET.get('max_price')
+    sort = request.GET.get('sort', 'latest')
+
+    SORT_OPTIONS = {
+        'latest': ('-created_at',),
+        'popular': ('-purchases_count', '-created_at'),
+        'price_asc': ('price', '-created_at'),
+        'price_desc': ('-price', '-created_at'),
+    }
+
+    projects = projects.order_by(*SORT_OPTIONS.get(sort, SORT_OPTIONS['latest']))
 
     q = request.GET.get('q', '').strip()
  
