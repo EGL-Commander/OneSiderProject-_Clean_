@@ -26,8 +26,16 @@ STOP_WORDS = {
 
 def project_list(request):
     categories = Category.objects.all()[:3]
+    all_categories = Category.objects.all()
 
-    return render(request, 'projects/Gallery Project List (Latest).html', {'categories' : categories})
+    return render(
+        request,
+        'projects/Gallery Project List (Latest).html',
+        {
+            'categories': categories,
+            'all_categories': all_categories,
+        }
+    )
 
 def project_list_api(request):
 

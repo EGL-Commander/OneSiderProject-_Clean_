@@ -716,7 +716,7 @@
     // Render real category chips from Django into the advanced panel
     (function buildAdvChips() {
         const categories = [
-            {% for category in categories %}
+            {% for category in all_categories %}
                 { name: "{{ category.name }}", value: "{{ category.slug }}" },
             {% endfor %}
         ];
