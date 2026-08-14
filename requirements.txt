@@ -2,8 +2,11 @@ asgiref==3.11.0
 certifi==2026.1.4
 cffi==2.0.0
 charset-normalizer==3.4.4
+cloudinary==1.44.1
 cryptography==46.0.4
 Django==6.0
+django-cloudinary-storage==0.3.0
+python-dotenv==1.1.1
 google-api-core==2.29.0
 google-api-python-client==2.189.0
 google-auth==2.48.0

@@ -53,6 +53,12 @@
                 </label>
 
                 {{ form.username }}
+
+                {% if form.username.help_text %}
+                    <p class="mt-2 text-xs" style="color: var(--text-main); opacity: 0.6;">
+                        {{ form.username.help_text }}
+                    </p>
+                {% endif %}
             </div>
 
             <div>
@@ -75,6 +81,12 @@
                 </label>
 
                 {{ form.password1 }}
+
+                {% if form.password1.help_text %}
+                    <p class="mt-2 text-xs" style="color: var(--text-main); opacity: 0.6;">
+                        {{ form.password1.help_text }}
+                    </p>
+                {% endif %}
             </div>
 
             <div>

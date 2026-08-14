@@ -3,7 +3,7 @@ from .models import Project, Category
 from django.db.models import Q, F, Case, When, IntegerField
 from django.contrib.auth.decorators import login_required
 from purchases.models import Purchase, DownloadToken
-from django.http import HttpResponseForbidden, FileResponse
+from django.http import FileResponse
 from django.utils import timezone
 from purchases.utils import cleanup_expired_tokens
 from purchases.gdrive import download_file_bytes
@@ -232,7 +232,16 @@ def download_project(request, slug):
     ).exists()
 
     if not has_access:
-        return HttpResponseForbidden("You have not purchased this project.")
+        return render(
+            request,
+            'projects/download_unauthorized.html',
+            {
+                'project': project,
+                'heading': 'Not Purchased',
+                'message': "You haven't acquired this asset yet. Purchase it to unlock the download.",
+            },
+            status=403
+        )
     
     if request.method == 'GET':
         return render(request, 'projects/download_warning.html', {'project': project})
@@ -246,7 +255,16 @@ def download_project(request, slug):
     )
 
     if recent_tokens.exists():
-        return HttpResponseForbidden("Please wait 60 Seconds before requesting another download.")
+        return render(
+            request,
+            'projects/download_unauthorized.html',
+            {
+                'project': project,
+                'heading': 'Slow Down',
+                'message': "Please wait 60 seconds before requesting another download link.",
+            },
+            status=429
+        )
 
 
     token = DownloadToken.objects.create(
@@ -265,7 +283,16 @@ def download_with_token(request, token):
         )
 
     if not token_obj.is_valid():
-        return HttpResponseForbidden("Token expired or already used.")
+        return render(
+            request,
+            'projects/download_unauthorized.html',
+            {
+                'project': token_obj.project,
+                'heading': 'Link Expired',
+                'message': "This download link has expired or was already used. Head back to the project and request a new one.",
+            },
+            status=403
+        )
     
     try:
         filename, mimetype, fh = download_file_bytes(token_obj.project.cloud_file_id)

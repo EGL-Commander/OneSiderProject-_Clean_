@@ -17,7 +17,6 @@ ENV/
 *.log
 *.pot
 *.pyc
-*.pyc
 db.sqlite3
 media/
 staticfiles/
@@ -34,8 +33,6 @@ Thumbs.db
 
 # PyCharm & VSCode settings
 *.iml
-.vscode/
-.idea/
 
 # Environment files
 .env
@@ -52,3 +49,7 @@ yarn-error.log
 
 # Secret Files
 **/secrets/
+
+# git patch / diff Files
+*.patch
+*.diff

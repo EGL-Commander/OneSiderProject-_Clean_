@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block title %}Access Denied - OneSider{% endblock %}
+
+{% block content %}
+
+<section class="min-h-screen flex items-center justify-center px-6 pt-32 pb-20">
+
+    <div class="card-container max-w-lg w-full p-8 md:p-10 text-center animate-subtle">
+
+        <p class="text-xs uppercase tracking-[0.3em]"
+           style="color: var(--accent);">
+            Restricted
+        </p>
+
+        <h1 class="text-3xl mt-4 mb-4"
+            style="color: var(--text-bright);">
+            {{ heading|default:"Access Denied" }}
+        </h1>
+
+        <p class="text-sm leading-relaxed"
+           style="color: var(--text-main);">
+            {{ message|default:"You don't have permission to download this asset." }}
+        </p>
+
+        <div class="flex flex-col sm:flex-row gap-4 mt-8">
+
+            {% if project %}
+                <a href="{% url 'project_detail' project.slug %}"
+                   class="btn-premium flex-1 py-3 text-xs tracking-widest uppercase">
+                    View Project
+                </a>
+            {% endif %}
+
+            <a href="{% url 'project_list' %}"
+               class="flex-1 py-3 text-xs tracking-widest uppercase border rounded-lg transition"
+               style="border-color: var(--border); color: var(--text-main);"
+               onmouseover="this.style.color='var(--text-bright)'; this.style.borderColor='var(--accent)';"
+               onmouseout="this.style.color='var(--text-main)'; this.style.borderColor='var(--border)';">
+                Back to Gallery
+            </a>
+
+        </div>
+
+    </div>
+
+</section>
+
+{% endblock %}
