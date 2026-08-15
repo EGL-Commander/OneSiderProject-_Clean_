@@ -152,6 +152,19 @@
 
 <script>
 
+// This page sits right at the authentication boundary: after a
+// successful login/registration the browser can still restore this
+// exact pre-auth HTML from its back-forward cache when the user hits
+// Back, without ever asking the server again. That would show a
+// signed-in user an empty login form as if they were signed out.
+// Forcing a real reload on a bfcache restore lets the server-side
+// "already authenticated" redirect (see accounts/urls.py) run again.
+window.addEventListener("pageshow", (event) => {
+    if (event.persisted) {
+        window.location.reload();
+    }
+});
+
 document.addEventListener("DOMContentLoaded", () => {
 
     const username = document.getElementById("id_username");

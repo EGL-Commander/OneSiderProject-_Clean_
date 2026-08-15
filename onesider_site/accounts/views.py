@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login
+from django.views.decorators.cache import never_cache
 from .forms import ProfileUpdateForm
 from projects.models import Project
 from .forms import RegisterForm
@@ -55,7 +56,16 @@ def edit_profile(request):
 
     return render(request,'accounts/Edit Profile.html',{'form' : form})
 
+@never_cache
 def register_view(request):
+
+    # Mirrors LoginView's redirect_authenticated_user behavior: an
+    # already-authenticated user landing on /register/ (e.g. via
+    # back/forward navigation) should be sent on, not shown the form
+    # again as if they were signed out.
+    if request.user.is_authenticated:
+        next_url = request.POST.get("next") or request.GET.get("next") or "project_list"
+        return redirect(next_url)
 
     if request.method == "POST":
 

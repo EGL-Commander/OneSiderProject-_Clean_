@@ -1,9 +1,17 @@
 from django.urls import path, reverse_lazy
+from django.views.decorators.cache import never_cache
 from . import views
 from django.contrib.auth import views as auth_views
 
 urlpatterns = [
-    path('login/', auth_views.LoginView.as_view(template_name='accounts/Login (Latest).html'), name='login'),
+    path(
+        'login/',
+        never_cache(auth_views.LoginView.as_view(
+            template_name='accounts/Login (Latest).html',
+            redirect_authenticated_user=True,
+        )),
+        name='login'
+    ),
     path('logout/', auth_views.LogoutView.as_view(next_page = reverse_lazy('project_list')), name='logout'),
     path('register/', views.register_view, name='register'),
     path('profile/', views.profile_view, name='profile'),

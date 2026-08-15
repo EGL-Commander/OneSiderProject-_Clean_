@@ -345,6 +345,19 @@
 
     if (purchaseForm) {
 
+        const purchaseBtn = document.getElementById("purchase-btn");
+
+        // If the user clicked Acquire (button now disabled and showing
+        // "Processing..."), got redirected to Razorpay's hosted page,
+        // then hit Back before finishing, the browser can restore this
+        // exact page from bfcache with the button frozen mid-request -
+        // even though no purchase actually went through. Put it back
+        // to its idle, clickable state so they can try again.
+        document.addEventListener("os:pagerestore", () => {
+            purchaseBtn.disabled = false;
+            purchaseBtn.innerText = `Acquire Asset — ₹${purchaseBtn.dataset.price}`;
+        });
+
         purchaseForm.addEventListener("submit", async (e) => {
 
             e.preventDefault();

@@ -160,6 +160,15 @@
 
 <script>
 
+// Same reasoning as the login page: force a fresh server round-trip
+// on bfcache restore so an already-registered/authenticated user
+// doesn't see this stale pre-auth form on back navigation.
+window.addEventListener("pageshow", (event) => {
+    if (event.persisted) {
+        window.location.reload();
+    }
+});
+
 document.addEventListener("DOMContentLoaded", () => {
 
     document.querySelectorAll(".register-form input").forEach(input => {

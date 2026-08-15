@@ -133,19 +133,30 @@
 
 <script>
 
+    const downloadBtn = document.getElementById("download-btn");
+
     document.querySelector("form")?.addEventListener(
         "submit",
         () => {
 
-            const btn =
-                document.getElementById("download-btn");
+            downloadBtn.disabled = true;
 
-            btn.disabled = true;
-
-            btn.innerText = "Generating Link...";
+            downloadBtn.innerText = "Generating Link...";
 
         }
     );
+
+    // The download itself is served as a file attachment, so the
+    // browser never actually navigates away from this page - meaning
+    // if the user leaves via Back/Forward afterward, this exact
+    // "Generating Link..." disabled state can get bfcache-restored
+    // later, permanently blocking a retry. Put it back to idle.
+    window.addEventListener("pageshow", (event) => {
+        if (event.persisted) {
+            downloadBtn.disabled = false;
+            downloadBtn.innerText = "Proceed to Download";
+        }
+    });
 
 </script>
 

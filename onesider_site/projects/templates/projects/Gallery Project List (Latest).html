@@ -679,6 +679,28 @@
         if (e.target.id === "load-more-btn" && !loading && hasMore) loadMore();
     });
 
+    // ── BFCACHE RESTORE ───────────────────────────────────────────
+    // If the user clicked into a project mid-load (loading === true,
+    // "Loading..." button, skeleton placeholders still in the grid)
+    // and then hit Back, bfcache can restore this exact in-flight
+    // snapshot. The frozen `loading = true` would also permanently
+    // block the scroll-triggered auto-load below, since it always
+    // checks `if (loading) return;`. Clear the in-flight state and
+    // drop any leftover skeletons; real content already in the grid
+    // (actual project cards) is left untouched.
+    document.addEventListener("os:pagerestore", () => {
+        loading = false;
+
+        document.querySelectorAll("#projects-grid .skeleton").forEach(sk => sk.remove());
+
+        const btn = document.getElementById("load-more-btn");
+        if (btn) {
+            btn.disabled = false;
+            btn.classList.remove("opacity-50", "cursor-not-allowed");
+            btn.innerText = "Load More";
+        }
+    });
+
     // ── CARD TEMPLATE ─────────────────────────────────────────────
     // Expects shape from project_list_api:
     // { title, price, slug, thumbnail_url, short_description }

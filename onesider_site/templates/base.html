@@ -744,9 +744,42 @@
             if (scrollLocks === 0) document.body.classList.remove("overflow-hidden");
         }
 
-        window.addEventListener("pageshow", () => {
+        // ── PAGE LIFECYCLE / BFCACHE RESTORE ─────────────────────
+        // When a browser restores a page from the back-forward cache
+        // (bfcache) on back/forward navigation, no script re-runs - the
+        // DOM and JS state are resumed exactly as they were the instant
+        // the user navigated away. That's usually desirable (e.g. a
+        // gallery's scroll position and loaded cards should persist),
+        // but transient/in-flight UI - an open mobile menu, an open
+        // overlay, a scroll lock - should not stay frozen open.
+        //
+        // event.persisted is true only for a genuine bfcache restore,
+        // never for a normal fresh load, so this never fires on first
+        // paint of a page.
+        window.addEventListener("pageshow", (event) => {
             scrollLocks = 0;
             document.body.classList.remove("overflow-hidden");
+
+            if (!event.persisted) return;
+
+            // Close the mobile stagger menu instantly (no transition -
+            // the user already navigated away from wherever they opened
+            // it, so animating back open->closed would be misleading).
+            if (mobileMenu.classList.contains("open")) {
+                mobileMenu.classList.remove("open", "closing");
+                mobileMenu.classList.add("-translate-y-full", "opacity-0", "pointer-events-none");
+                menuBtn.classList.remove("active");
+            }
+            backdrop.classList.add("opacity-0", "pointer-events-none");
+
+            // Close the search overlay and advanced-filters overlay too.
+            searchOverlay.classList.add("opacity-0", "pointer-events-none", "overflow-hidden");
+            advPage.classList.add("opacity-0", "pointer-events-none");
+
+            // Let individual page scripts (gallery infinite-scroll,
+            // purchase button, etc.) reset their own in-flight state
+            // without this file needing to know their internals.
+            document.dispatchEvent(new CustomEvent("os:pagerestore"));
         });
         // ──────────────────────────────────────────────────────────
 
