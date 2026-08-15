@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from .models import Project, Category
+from .models import Project, Category, Tag
 from django.db.models import Q, F, Case, When, IntegerField
 from django.contrib.auth.decorators import login_required
 from purchases.models import Purchase, DownloadToken
@@ -26,12 +26,16 @@ STOP_WORDS = {
 
 def project_list(request):
     all_categories = Category.objects.all()
+    all_tags = Tag.objects.all()
+    project_types = Project.PROJECT_TYPE_CHOICES
 
     return render(
         request,
         'projects/Gallery Project List (Latest).html',
         {
             'all_categories': all_categories,
+            'all_tags': all_tags,
+            'project_types': project_types,
         }
     )
 
@@ -42,6 +46,8 @@ def project_list_api(request):
     )
 
     category = request.GET.get('category')
+    tags = request.GET.get('tags')
+    project_type = request.GET.get('project_type')
     min_price = request.GET.get('min_price')
     max_price = request.GET.get('max_price')
     sort = request.GET.get('sort', 'latest')
@@ -112,6 +118,18 @@ def project_list_api(request):
         category_slugs = [c.strip() for c in category.split(",") if c.strip()]
         projects = projects.filter(
             categories__slug__in=category_slugs
+        )
+
+    if tags:
+        tag_slugs = [t.strip() for t in tags.split(",") if t.strip()]
+        projects = projects.filter(
+            tags__slug__in=tag_slugs
+        )
+
+    if project_type:
+        type_codes = [t.strip() for t in project_type.split(",") if t.strip()]
+        projects = projects.filter(
+            project_type__in=type_codes
         )
 
     if min_price:

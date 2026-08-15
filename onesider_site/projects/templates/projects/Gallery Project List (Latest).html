@@ -141,6 +141,8 @@
         return {
             search: "",
             category: [],
+            tags: [],
+            project_type: [],
             min_price: null,
             max_price: null,
             sort: "latest"
@@ -153,6 +155,12 @@
     let hasMore = true;
     let autoLoads = 0;
     const maxAutoLoads = 2;
+
+    // Bumped every time the active query changes (new sort/filter/search/
+    // reset). Any fetch started under an older generation is stale and
+    // must not touch shared state (page/hasMore/loading) or the DOM once
+    // it resolves - it may finish after a newer request already has.
+    let requestId = 0;
 
     // ── STICKY FILTERS ────────────────────────────────────────────
     const filtersWrap = document.getElementById("filters-wrap");
@@ -240,6 +248,8 @@
     function updateURL() {
         const params = new URLSearchParams();
         if (filters.category.length > 0) params.set("category", filters.category.join(","));
+        if (filters.tags.length > 0) params.set("tags", filters.tags.join(","));
+        if (filters.project_type.length > 0) params.set("project_type", filters.project_type.join(","));
         if (filters.min_price !== null) params.set("min_price", filters.min_price);
         if (filters.max_price !== null) params.set("max_price", filters.max_price);
         if (filters.sort && filters.sort !== "latest") params.set("sort", filters.sort);
@@ -253,6 +263,8 @@
     function loadFromURL() {
         const params = new URLSearchParams(window.location.search);
         const category = params.get("category");
+        const tags = params.get("tags");
+        const projectType = params.get("project_type");
         const min = params.get("min_price");
         const max = params.get("max_price");
         const q = params.get("q");
@@ -260,6 +272,8 @@
 
         filters.search = q || "";
         filters.category = category ? category.split(",") : [];
+        filters.tags = tags ? tags.split(",") : [];
+        filters.project_type = projectType ? projectType.split(",") : [];
         filters.min_price = min ? parseFloat(min) : null;
         filters.max_price = max ? parseFloat(max) : null;
         filters.sort = sort || "latest";
@@ -289,7 +303,11 @@
         // Sync advanced panel chips if they exist
         document.querySelectorAll(".adv-chip").forEach(chip => {
             chip.classList.remove("active");
-            if (filters.category.includes(chip.dataset.value)) chip.classList.add("active");
+            const group = chip.dataset.filter;
+            const groupValues = filters[group];
+            if (Array.isArray(groupValues) && groupValues.includes(chip.dataset.value)) {
+                chip.classList.add("active");
+            }
         });
 
         const advMin = document.getElementById("adv-min");
@@ -329,7 +347,7 @@
     });
 
     function updateFilterCount(source = filters) {
-        let count = source.category.length;
+        let count = source.category.length + source.tags.length + source.project_type.length;
 
         if (
             source.min_price !== null ||
@@ -356,6 +374,12 @@
         if (source.category.length > 0)
             summary.push(source.category.map(c => c.charAt(0).toUpperCase() + c.slice(1)).join(", "));
 
+        if (source.tags.length > 0)
+            summary.push(source.tags.map(t => t.charAt(0).toUpperCase() + t.slice(1)).join(", "));
+
+        if (source.project_type.length > 0)
+            summary.push(source.project_type.map(t => t.charAt(0).toUpperCase() + t.slice(1)).join(", "));
+
         if (source.min_price !== null && source.max_price !== null)
             summary.push(`₹${source.min_price}–₹${source.max_price}`);
         else if (source.min_price !== null) summary.push(`₹${source.min_price}+`);
@@ -373,7 +397,9 @@
 
     // ── DRAFT FILTERS (advanced panel) ───────────────────────────
     function syncDraftFilters() {
-        draftFilters.category = Array.from(document.querySelectorAll(".adv-chip.active")).map(c => c.dataset.value);
+        draftFilters.category = Array.from(document.querySelectorAll('.adv-chip[data-filter="category"].active')).map(c => c.dataset.value);
+        draftFilters.tags = Array.from(document.querySelectorAll('.adv-chip[data-filter="tags"].active')).map(c => c.dataset.value);
+        draftFilters.project_type = Array.from(document.querySelectorAll('.adv-chip[data-filter="project_type"].active')).map(c => c.dataset.value);
         const min = document.getElementById("adv-min").value;
         const max = document.getElementById("adv-max").value;
         draftFilters.min_price = min ? parseFloat(min) : null;
@@ -386,15 +412,21 @@
     // ── LIVE RESULT COUNT ────────────────────────────────────────
     // Shows how many projects match the filters currently being drafted
     // in the Advanced Filters panel, before the user hits "Apply".
+    let liveResultsRequestId = 0;
+
     const updateLiveResults = debounce(async (draftState) => {
         const liveResultsEl = document.getElementById("live-results");
         if (!liveResultsEl) return;
+
+        const myRequestId = ++liveResultsRequestId;
 
         const params = new URLSearchParams();
         params.set("page", 1);
 
         if (filters.search) params.set("q", filters.search);
         if (draftState.category.length > 0) params.set("category", draftState.category.join(","));
+        if (draftState.tags.length > 0) params.set("tags", draftState.tags.join(","));
+        if (draftState.project_type.length > 0) params.set("project_type", draftState.project_type.join(","));
         if (draftState.min_price !== null) params.set("min_price", draftState.min_price);
         if (draftState.max_price !== null) params.set("max_price", draftState.max_price);
 
@@ -406,9 +438,15 @@
             });
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             const data = await response.json();
+
+            // A newer draft edit has already fired another request since
+            // this one started - that response owns the label now, not us.
+            if (myRequestId !== liveResultsRequestId) return;
+
             const total = data.total ?? 0;
             liveResultsEl.textContent = total === 1 ? "1 Result Matches" : `${total} Results Match`;
         } catch (err) {
+            if (myRequestId !== liveResultsRequestId) return;
             liveResultsEl.textContent = "0 Results Match";
         }
     }, 200);
@@ -479,6 +517,8 @@
 
         if (filters.search) params.set("q", filters.search);
         if (filters.category.length > 0) params.set("category", filters.category.join(","));
+        if (filters.tags.length > 0) params.set("tags", filters.tags.join(","));
+        if (filters.project_type.length > 0) params.set("project_type", filters.project_type.join(","));
         if (filters.min_price !== null) params.set("min_price", filters.min_price);
         if (filters.max_price !== null) params.set("max_price", filters.max_price);
         if (filters.sort) params.set("sort", filters.sort);
@@ -513,6 +553,11 @@
     async function loadMore() {
         if (loading) return;
 
+        // Snapshot which "generation" of the query this fetch belongs to.
+        // If resetState() runs again (new sort/filter/search) before this
+        // resolves, requestId will have moved on and this response is stale.
+        const myRequestId = requestId;
+
         const btn = document.getElementById("load-more-btn");
         if (btn) { btn.disabled = true; btn.classList.add("opacity-50", "cursor-not-allowed"); btn.innerText = "Loading..."; }
 
@@ -532,8 +577,17 @@
         try {
             const data = await fetchProjects();
 
-            // Remove skeletons
+            // Remove skeletons (safe no-op if resetState() already wiped
+            // the grid out from under this stale request).
             skeletons.forEach(sk => sk.remove());
+
+            if (myRequestId !== requestId) {
+                // A newer query has since started (or already finished) -
+                // this response no longer describes what's on screen.
+                // The request that owns the current generation is
+                // responsible for loading/page/hasMore/DOM, not us.
+                return;
+            }
 
             if (!data.projects || data.projects.length === 0) {
 
@@ -542,6 +596,8 @@
                     const hasFilters =
                         filters.search ||
                         filters.category.length > 0 ||
+                        filters.tags.length > 0 ||
+                        filters.project_type.length > 0 ||
                         filters.min_price !== null ||
                         filters.max_price !== null;
 
@@ -602,6 +658,13 @@
 
         } catch (err) {
             skeletons.forEach(sk => sk.remove());
+
+            if (myRequestId !== requestId) {
+                // Stale request failed - the current generation isn't
+                // ours to report an error for.
+                return;
+            }
+
             showError();
             loading = false;
             if (btn) {
@@ -667,6 +730,7 @@
         hasMore = true;
         autoLoads = 0;
         loading = false;
+        requestId++;
         document.getElementById("projects-grid").innerHTML = "";
         document.getElementById("load-more-wrap").innerHTML =
             `<button id="load-more-btn" class="btn-premium px-10 py-3 text-xs tracking-widest uppercase">Load More</button>`;
@@ -728,28 +792,50 @@
     document.addEventListener("DOMContentLoaded", init);
 
     // ── DYNAMIC ADV CHIPS ────────────────────────────────────────
-    // Render real category chips from Django into the advanced panel
+    // Render real category/tag/type chips from Django into the advanced panel.
     (function buildAdvChips() {
+
+        function renderChipGroup(containerId, filterKey, items) {
+            const container = document.getElementById(containerId);
+            if (!container || items.length === 0) return;
+
+            container.innerHTML = items.map(item =>
+                `<button class="adv-chip" data-filter="${filterKey}" data-value="${item.value}">${item.name}</button>`
+            ).join("");
+
+            container.querySelectorAll(".adv-chip").forEach(chip => {
+                chip.addEventListener("click", () => {
+                    chip.classList.toggle("active");
+                    if (typeof syncDraftFilters === "function") syncDraftFilters();
+                });
+            });
+        }
+
         const categories = [
             {% for category in all_categories %}
                 { name: "{{ category.name }}", value: "{{ category.slug }}" },
             {% endfor %}
         ];
 
-        const container = document.querySelector("#advanced-filters-page .flex.flex-wrap.gap-3");
-        if (!container || categories.length === 0) return;
+        const tags = [
+            {% for tag in all_tags %}
+                { name: "{{ tag.name }}", value: "{{ tag.slug }}" },
+            {% endfor %}
+        ];
 
-        container.innerHTML = categories.map(cat =>
-            `<button class="adv-chip" data-filter="category" data-value="${cat.value}">${cat.name}</button>`
-        ).join("");
+        const projectTypes = [
+            {% for value, label in project_types %}
+                { name: "{{ label }}", value: "{{ value }}" },
+            {% endfor %}
+        ];
 
-        // Re-attach click listeners after rendering
-        container.querySelectorAll(".adv-chip").forEach(chip => {
-            chip.addEventListener("click", () => {
-                chip.classList.toggle("active");
-                if (typeof syncDraftFilters === "function") syncDraftFilters();
-            });
-        });
+        renderChipGroup("adv-category-chips", "category", categories);
+        renderChipGroup("adv-tags-chips", "tags", tags);
+        renderChipGroup("adv-type-chips", "project_type", projectTypes);
+
+        // Chips were just rebuilt from scratch, so re-apply whatever
+        // filters/draftFilters already hold (e.g. from a URL on load).
+        if (typeof syncUIWithFilters === "function") syncUIWithFilters();
     })();
 
 </script>

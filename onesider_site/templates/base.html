@@ -658,14 +658,18 @@
                 </button>
             </div>
 
-            <div class="grid md:grid-cols-2 gap-12">
+            <div class="grid md:grid-cols-3 gap-12">
                 <div>
                     <p class="text-xs mb-4 uppercase tracking-widest" style="color: var(--text-main);">Category</p>
-                    <div class="flex flex-wrap gap-3">
+                    <div id="adv-category-chips" class="flex flex-wrap gap-3">
                         <button class="adv-chip" data-filter="category" data-value="interface">Interface</button>
                         <button class="adv-chip" data-filter="category" data-value="framework">Framework</button>
                         <button class="adv-chip" data-filter="category" data-value="tool">Tool</button>
                     </div>
+                </div>
+                <div>
+                    <p class="text-xs mb-4 uppercase tracking-widest" style="color: var(--text-main);">Type</p>
+                    <div id="adv-type-chips" class="flex flex-wrap gap-3"></div>
                 </div>
                 <div>
                     <p class="text-xs mb-4 uppercase tracking-widest" style="color: var(--text-main);">Price</p>
@@ -674,6 +678,11 @@
                         <input id="adv-max" type="number" placeholder="Max" class="input-premium bg-transparent w-full py-1 text-sm">
                     </div>
                 </div>
+            </div>
+
+            <div class="mt-12">
+                <p class="text-xs mb-4 uppercase tracking-widest" style="color: var(--text-main);">Tags</p>
+                <div id="adv-tags-chips" class="flex flex-wrap gap-3"></div>
             </div>
 
             <p id="live-results" class="mt-4 text-xs tracking-widest" style="color: var(--text-main);">0 Results Match</p>
