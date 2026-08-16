@@ -4,6 +4,86 @@
 
 {% block head %}
     {{ block.super }}
+
+    <style>
+
+        /* ── Project Detail media: touch-aware thumbnail states ──────
+           The grayscale-dim / hover-to-reveal treatment only makes
+           sense where hovering can "preview" a thumbnail without
+           committing to it. On touch there's no hover - tapping a
+           thumbnail immediately selects it - so permanently dimming
+           the non-selected ones would mean a user could never actually
+           see them in full color at all. Touch devices therefore show
+           every thumbnail in full color always, and rely solely on the
+           accent border ring to show which one is currently active. */
+        .media-thumb img {
+            transition: transform 0.15s ease;
+        }
+        .media-thumb {
+            transition: border-color 0.35s ease;
+        }
+        .media-thumb.active {
+            border-color: var(--accent) !important;
+        }
+        @media (hover: hover) and (pointer: fine) {
+            .media-thumb img {
+                transition: filter 0.35s ease, opacity 0.35s ease, transform 0.35s ease;
+                filter: grayscale(70%);
+                opacity: 0.65;
+            }
+            .media-thumb.active img {
+                filter: grayscale(0%);
+                opacity: 1;
+            }
+            .media-thumb:hover img {
+                filter: grayscale(0%);
+                opacity: 1;
+                transform: scale(1.04);
+            }
+            .media-thumb:hover {
+                border-color: var(--accent) !important;
+            }
+        }
+        .media-thumb:active img {
+            transform: scale(0.96);
+        }
+
+        /* ── Hero image: preserve full image, smooth crossfade ──────── */
+        #project-hero-img {
+            opacity: 1;
+            transition: opacity 0.35s ease, transform 0.35s ease;
+        }
+        #project-hero-img.hero-loading {
+            opacity: 0;
+        }
+        #project-hero-img.is-switching {
+            opacity: 0;
+            transform: scale(0.98);
+        }
+
+        /* ── Media tray seek indicator ───────────────────────────────
+           A slim, brand-accent progress track that only appears when
+           the tray actually overflows - not a generic scrollbar. */
+        #media-seek-track {
+            background: var(--border);
+            cursor: pointer;
+        }
+        #media-seek-fill {
+            background: var(--accent);
+            transition: width 0.2s ease, margin-left 0.1s linear;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .media-thumb img,
+            .media-thumb,
+            #project-hero-img,
+            #media-seek-fill {
+                transition: none !important;
+            }
+        }
+
+    </style>
+
 {% endblock %}
 
 {% block content %}
@@ -22,7 +102,7 @@
                         <img id="project-hero-img"
                             src="{{ project.thumbnail.url }}"
                             alt="{{ project.title }}"
-                            class="w-full h-full object-cover opacity-0 transition-opacity duration-700">
+                            class="w-full h-full object-contain hero-loading">
                     {% else %}
                         <div class="w-full h-full flex items-center justify-center text-xs tracking-widest uppercase"
                             style="color: var(--border);">
@@ -38,12 +118,12 @@
 
                 <div class="mt-4">
 
-                    <div class="flex gap-3 overflow-x-auto pb-2">
+                    <div id="media-tray" class="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
 
                         {% if project.thumbnail %}
                             <button
                                 type="button"
-                                class="media-thumb flex-shrink-0 w-24 h-16 md:w-32 md:h-20 border rounded-lg overflow-hidden transition-opacity duration-200"
+                                class="media-thumb active flex-shrink-0 w-24 h-16 md:w-32 md:h-20 border rounded-lg overflow-hidden"
                                 data-media-url="{{ project.thumbnail.url }}"
                                 style="
                                     background: var(--bg-soft);
@@ -53,7 +133,7 @@
                                 <img
                                     src="{{ project.thumbnail.url }}"
                                     alt="{{ project.title }} thumbnail"
-                                    class="w-full h-full object-cover"
+                                    class="w-full h-full object-contain"
                                 >
                             </button>
                         {% endif %}
@@ -63,7 +143,7 @@
 
                             <button
                                 type="button"
-                                class="media-thumb flex-shrink-0 w-24 h-16 md:w-32 md:h-20 border rounded-lg overflow-hidden transition-opacity duration-200"
+                                class="media-thumb flex-shrink-0 w-24 h-16 md:w-32 md:h-20 border rounded-lg overflow-hidden"
                                 data-media-url="{{ media.image.url }}"
                                 style="
                                     background: var(--bg-soft);
@@ -73,12 +153,18 @@
                                 <img
                                     src="{{ media.image.url }}"
                                     alt="{{ project.title }} preview"
-                                    class="w-full h-full object-cover"
+                                    class="w-full h-full object-contain"
                                 >
                             </button>
 
                         {% endfor %}
 
+                    </div>
+
+                    <!-- Persistent seek indicator - only shown when the
+                         tray actually overflows (more media than fits) -->
+                    <div id="media-seek-track" class="hidden mt-2 h-[3px] rounded-full overflow-hidden">
+                        <div id="media-seek-fill" class="h-full rounded-full" style="width: 0%; margin-left: 0%;"></div>
                     </div>
 
                 </div>
@@ -248,10 +334,10 @@
     if (heroImg) {
 
         if (heroImg.complete) {
-            heroImg.classList.remove("opacity-0");
+            heroImg.classList.remove("hero-loading");
         } else {
             heroImg.onload = () =>
-                heroImg.classList.remove("opacity-0");
+                heroImg.classList.remove("hero-loading");
         }
 
     }
@@ -261,27 +347,197 @@
     const mediaThumbs = document.querySelectorAll(".media-thumb");
     const heroImage = document.getElementById("project-hero-img");
 
+    // Preload the target image before swapping the hero <img>'s src, so
+    // the crossfade is a deliberate, timed transition rather than a
+    // blank gap while the browser fetches it over the network.
+    //
+    // Cached images can fire `load` almost instantly, which would skip
+    // the fade-out entirely if we swapped as soon as it resolved - so
+    // the swap always waits for at least a full fade-out duration,
+    // and for the image to actually be ready, whichever is longer.
+    const HERO_FADE_MS = 350; // keep in sync with the CSS transition duration below
+
+    function switchHeroImage(newUrl) {
+
+        if (!heroImage || !newUrl) return;
+
+        heroImage.classList.add("is-switching");
+
+        const preloader = new Image();
+
+        const imageReady = new Promise((resolve) => {
+            preloader.onload = resolve;
+            preloader.onerror = resolve; // don't block forever on a failed load
+        });
+
+        const fadeOutPlayed = new Promise((resolve) => {
+            setTimeout(resolve, HERO_FADE_MS);
+        });
+
+        preloader.src = newUrl;
+
+        Promise.all([imageReady, fadeOutPlayed]).then(() => {
+            heroImage.src = newUrl;
+            requestAnimationFrame(() => {
+                heroImage.classList.remove("is-switching");
+            });
+        });
+
+    }
+
     mediaThumbs.forEach((thumb) => {
 
         thumb.addEventListener("click", () => {
 
+            if (thumb.classList.contains("active")) return;
+
             const newUrl = thumb.dataset.mediaUrl;
 
-            if (!heroImage || !newUrl) {
-                return;
-            }
+            if (!newUrl) return;
 
-            heroImage.classList.add("opacity-0");
+            mediaThumbs.forEach((t) => t.classList.remove("active"));
+            thumb.classList.add("active");
 
-            heroImage.onload = () => {
-                heroImage.classList.remove("opacity-0");
-            };
-
-            heroImage.src = newUrl;
+            switchHeroImage(newUrl);
 
         });
 
     });
+
+    // ── Media tray seek indicator ───────────────────────────────────
+    // A slim accent-colored bar reflecting scroll position, shown only
+    // when the tray actually overflows its visible width.
+    (function initMediaSeek() {
+
+        const tray = document.getElementById("media-tray");
+        const seekTrack = document.getElementById("media-seek-track");
+        const seekFill = document.getElementById("media-seek-fill");
+
+        if (!tray || !seekTrack || !seekFill) return;
+
+        function updateSeek() {
+
+            const { scrollWidth, clientWidth, scrollLeft } = tray;
+            const overflow = scrollWidth - clientWidth;
+
+            if (overflow <= 4) {
+                seekTrack.classList.add("hidden");
+                return;
+            }
+
+            seekTrack.classList.remove("hidden");
+
+            const fillWidthPct = Math.max((clientWidth / scrollWidth) * 100, 8);
+            const maxLeftPct = 100 - fillWidthPct;
+            const leftPct = maxLeftPct * (scrollLeft / overflow);
+
+            seekFill.style.width = `${fillWidthPct}%`;
+            seekFill.style.marginLeft = `${leftPct}%`;
+
+        }
+
+        let seekRaf = null;
+
+        tray.addEventListener("scroll", () => {
+            if (seekRaf) return;
+            seekRaf = requestAnimationFrame(() => {
+                updateSeek();
+                seekRaf = null;
+            });
+        });
+
+        window.addEventListener("resize", updateSeek);
+        window.addEventListener("load", updateSeek);
+
+        // Images loading can change scrollWidth after first paint
+        tray.querySelectorAll("img").forEach((img) => {
+            if (!img.complete) img.addEventListener("load", updateSeek);
+        });
+
+        updateSeek();
+
+        // ── Wheel scroll on hover ─────────────────────────────────
+        // overflow-x-auto works fine on touch (native swipe), but a
+        // plain mouse has no discoverable way to scroll it - hovering
+        // the tray and using the (vertical) scroll wheel now scrolls
+        // it horizontally, which is the standard pattern for this
+        // (same as most horizontal image/carousel strips). Native
+        // horizontal trackpad gestures are left completely alone.
+        //
+        // Wheel events arrive in irregular, chunky bursts (especially
+        // from a physical mouse wheel), so jumping scrollLeft directly
+        // on each event looks stepped/jerky. Instead we accumulate a
+        // target position and ease toward it every animation frame.
+        let trayScrollTarget = tray.scrollLeft;
+        let trayScrollAnim = null;
+        const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+        function easeTrayScroll() {
+
+            const diff = trayScrollTarget - tray.scrollLeft;
+
+            if (Math.abs(diff) < 0.5) {
+                tray.scrollLeft = trayScrollTarget;
+                trayScrollAnim = null;
+                return;
+            }
+
+            tray.scrollLeft += diff * 0.2;
+            trayScrollAnim = requestAnimationFrame(easeTrayScroll);
+
+        }
+
+        tray.addEventListener("wheel", (e) => {
+
+            const overflow = tray.scrollWidth - tray.clientWidth;
+            if (overflow <= 0) return;
+
+            if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+
+            e.preventDefault();
+
+            trayScrollTarget = Math.max(0, Math.min(trayScrollTarget + e.deltaY, overflow));
+
+            if (reduceMotion) {
+                tray.scrollLeft = trayScrollTarget;
+                return;
+            }
+
+            if (!trayScrollAnim) {
+                trayScrollAnim = requestAnimationFrame(easeTrayScroll);
+            }
+
+        }, { passive: false });
+
+        // ── Click/drag on the seek bar itself to jump/scrub ───────
+        function scrollToPointerX(clientX) {
+            const rect = seekTrack.getBoundingClientRect();
+            const ratio = Math.min(Math.max((clientX - rect.left) / rect.width, 0), 1);
+            const overflow = tray.scrollWidth - tray.clientWidth;
+            tray.scrollLeft = ratio * overflow;
+        }
+
+        let seekDragging = false;
+
+        seekTrack.addEventListener("pointerdown", (e) => {
+            seekDragging = true;
+            seekTrack.setPointerCapture(e.pointerId);
+            scrollToPointerX(e.clientX);
+        });
+
+        seekTrack.addEventListener("pointermove", (e) => {
+            if (!seekDragging) return;
+            scrollToPointerX(e.clientX);
+        });
+
+        function endSeekDrag() {
+            seekDragging = false;
+        }
+
+        seekTrack.addEventListener("pointerup", endSeekDrag);
+        seekTrack.addEventListener("pointercancel", endSeekDrag);
+
+    })();
 
 
     const saveForm = document.getElementById("save-form");

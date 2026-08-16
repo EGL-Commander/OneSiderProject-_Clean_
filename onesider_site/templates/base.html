@@ -124,10 +124,26 @@
             overflow: hidden;
             border-bottom: 1px solid var(--border);
         }
-        .card-image-wrap img {
-            transition: transform 0.6s ease, filter 0.6s ease, opacity 0.6s ease;
-            filter: grayscale(100%);
-            opacity: 0.4;
+
+        /* The grayscale-dim / hover-to-reveal treatment only makes sense
+           on hover-capable pointers - on touch, tapping a card navigates
+           away immediately, so there's no way to "reveal" it first. Touch
+           devices show every card thumbnail in full color from the start. */
+        @media (hover: hover) and (pointer: fine) {
+            .card-image-wrap img {
+                transition: transform 0.6s ease, filter 0.6s ease, opacity 0.6s ease;
+                filter: grayscale(100%);
+                opacity: 0.4;
+            }
+            [data-theme="light"] .card-image-wrap img {
+                opacity: 0.85;
+                filter: grayscale(40%);
+            }
+            .card-container:hover img {
+                transform: scale(1.05);
+                filter: grayscale(0%) !important;
+                opacity: 1 !important;
+            }
         }
 
         .profile-menu-item {
@@ -137,16 +153,6 @@
             background: rgba(var(--accent-rgb), 0.1);
         }
 
-        [data-theme="light"] .card-image-wrap img {
-            opacity: 0.85;
-            filter: grayscale(40%);
-        }
-
-        .card-container:hover img {
-            transform: scale(1.05);
-            filter: grayscale(0%) !important;
-            opacity: 1 !important;
-        }
         .card-container:active { transform: translateY(-4px) scale(0.97); }
 
         /* Scrollbar */
