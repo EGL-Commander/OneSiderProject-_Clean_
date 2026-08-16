@@ -544,52 +544,76 @@
 
     if (saveForm) {
 
+        let saveInFlight = false;
+
         saveForm.addEventListener("submit", async (e) => {
 
             e.preventDefault();
 
-            const response = await fetch(
-                saveForm.action,
-                {
-                    method: "POST",
-                    headers: {
-                        "X-CSRFToken":
-                            saveForm.querySelector(
-                                "[name=csrfmiddlewaretoken]"
-                            ).value
+            // The backend is a pure toggle with no idempotency key, so
+            // two overlapping requests would each flip the state and
+            // whichever response lands last "wins" the button text -
+            // not necessarily the state the user actually clicked for.
+            // Blocking overlap here is the simplest correct fix.
+            if (saveInFlight) return;
+            saveInFlight = true;
+
+            const btn = document.getElementById("save-btn");
+            const count = document.getElementById("save-count");
+            const previousText = btn.innerText;
+
+            btn.disabled = true;
+
+            try {
+
+                const response = await fetch(
+                    saveForm.action,
+                    {
+                        method: "POST",
+                        headers: {
+                            "X-CSRFToken":
+                                saveForm.querySelector(
+                                    "[name=csrfmiddlewaretoken]"
+                                ).value
+                        }
                     }
+                );
+
+                if (!response.ok) {
+                    toast("Something went wrong");
+                    return;
                 }
-            );
 
-            if (!response.ok) {
+                const data = await response.json();
+
+                count.innerText =
+                    `${data.saves_count} Saves`;
+
+                if (data.saved) {
+
+                    btn.innerText = "♥ Saved";
+
+                    toast("Project Saved");
+
+                } else {
+
+                    btn.innerText =
+                        "♡ Save for Later";
+
+                    toast("Project Removed");
+
+                }
+
+            } catch (err) {
+                // Genuine network failure (offline, DNS, etc.) - fetch()
+                // throws rather than resolving, so this must be caught
+                // separately from the !response.ok case above, or the
+                // user gets zero feedback and a permanently stale button.
+                btn.innerText = previousText;
                 toast("Something went wrong");
-                return;
-            }
-
-            const data = await response.json();
-
-            const btn =
-                document.getElementById("save-btn");
-
-            const count =
-                document.getElementById("save-count");
-
-            count.innerText =
-                `${data.saves_count} Saves`;
-
-            if (data.saved) {
-
-                btn.innerText = "♥ Saved";
-
-                toast("Project Saved");
-
-            } else {
-
-                btn.innerText =
-                    "♡ Save for Later";
-
-                toast("Project Removed");
-
+            } finally {
+                btn.disabled = false;
+                saveInFlight = false;
             }
 
         });

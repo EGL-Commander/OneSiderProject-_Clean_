@@ -105,7 +105,7 @@
 
         <div class="flex flex-col sm:flex-row gap-4">
 
-            <form method="post" class="flex-1">
+            <form method="post" class="flex-1" id="download-form" target="download-frame">
                 {% csrf_token %}
 
                 <button id="download-btn" type="submit"
@@ -114,6 +114,20 @@
                 </button>
 
             </form>
+
+            <!--
+                The form submits into this hidden iframe instead of the
+                top-level page. Submitting normally would cause the
+                browser to attempt navigating the whole page, and since
+                the eventual response is a file attachment, that
+                navigation gets aborted/reset in a way that destroys this
+                page's JS state (timers, the button's disabled state)
+                before any feedback can ever be shown. Confining the
+                navigation to this iframe means the actual page never
+                navigates at all, so the completion-polling script below
+                keeps running the entire time.
+            -->
+            <iframe name="download-frame" style="display:none;" aria-hidden="true"></iframe>
 
             <button type="button"
                     onclick="window.location.href='{% url 'project_detail' project.slug %}'"
@@ -135,13 +149,54 @@
 
     const downloadBtn = document.getElementById("download-btn");
 
-    document.querySelector("form")?.addEventListener(
+    function getCookie(name) {
+        const match = document.cookie.match(
+            new RegExp('(?:^|; )' + name + '=([^;]*)')
+        );
+        return match ? decodeURIComponent(match[1]) : null;
+    }
+
+    function clearCookie(name) {
+        document.cookie = `${name}=; Max-Age=0; path=/`;
+    }
+
+    document.getElementById("download-form")?.addEventListener(
         "submit",
         () => {
 
             downloadBtn.disabled = true;
 
             downloadBtn.innerText = "Generating Link...";
+
+            // The form targets the hidden iframe above, so this page
+            // itself never navigates. Poll for the completion cookie
+            // the server sets alongside the actual file response
+            // (received inside the iframe) to know when it's done.
+            let elapsed = 0;
+            const pollInterval = 500;
+            const maxWait = 20000;
+
+            const poll = setInterval(() => {
+                elapsed += pollInterval;
+
+                if (getCookie("download_ready")) {
+                    clearCookie("download_ready");
+                    clearInterval(poll);
+                    downloadBtn.disabled = false;
+                    downloadBtn.innerText = "Download Complete ✓";
+                    if (typeof toast === "function") toast("Download complete");
+                    return;
+                }
+
+                if (elapsed >= maxWait) {
+                    // Safety net - if detection genuinely never fires
+                    // (unusual browser behavior, slow network, etc.),
+                    // don't leave the button stuck disabled forever.
+                    clearInterval(poll);
+                    downloadBtn.disabled = false;
+                    downloadBtn.innerText = "Proceed to Download";
+                }
+            }, pollInterval);
 
         }
     );

@@ -335,9 +335,24 @@ def download_with_token(request, token):
     token_obj.is_used = True
     token_obj.save(update_fields=['is_used'])
 
-    return FileResponse(
+    response = FileResponse(
         fh,
         as_attachment=True,
         filename=filename,
         content_type=mimetype
     )
+
+    # The browser doesn't navigate anywhere for an attachment response,
+    # so the warning page has no built-in way to know the download
+    # actually finished. This cookie is the signal it polls for - it
+    # doesn't touch the file response body/type or any auth/token logic
+    # above, it just rides along on the same response.
+    response.set_cookie(
+        'download_ready',
+        token_obj.token,
+        max_age=30,
+        httponly=False,
+        samesite='Lax'
+    )
+
+    return response
