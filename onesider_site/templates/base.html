@@ -389,7 +389,7 @@
 
                 <div class="hidden md:flex gap-8 text-[13px] tracking-wide nav-link">
                     <a href="/" class="nav-link-item opacity-50 hover:opacity-100 transition-opacity">Gallery</a>
-                    <a href="/archive/" class="nav-link-item opacity-50 hover:opacity-100 transition-opacity">Archive</a>
+                    <a href="{% url 'library' %}" class="nav-link-item opacity-50 hover:opacity-100 transition-opacity">Archive</a>
                     <a href="/journal/" class="nav-link-item opacity-50 hover:opacity-100 transition-opacity">Journal</a>
                 </div>
 
@@ -564,7 +564,7 @@
             onmouseover="this.style.color='var(--text-bright)'"
             onmouseout="this.style.color='var(--text-main)'">Gallery</a>
 
-        <a href="/archive/" class="p-5 transition hover:tracking-wider"
+        <a href="{% url 'library' %}" class="p-5 transition hover:tracking-wider"
             style="color: var(--text-main);"
             onmouseover="this.style.color='var(--text-bright)'"
             onmouseout="this.style.color='var(--text-main)'">Archive</a>
@@ -611,7 +611,7 @@
                     <div class="space-y-3">
                         <h3 class="text-xs tracking-widest uppercase mb-3" style="color: var(--text-bright);">Explore</h3>
                         <a href="/" class="block opacity-50 hover:opacity-100 transition" style="color: var(--text-bright);">Gallery</a>
-                        <a href="/archive/" class="block opacity-50 hover:opacity-100 transition" style="color: var(--text-bright);">Archive</a>
+                        <a href="{% url 'library' %}" class="block opacity-50 hover:opacity-100 transition" style="color: var(--text-bright);">Archive</a>
                         <a href="/journal/" class="block opacity-50 hover:opacity-100 transition" style="color: var(--text-bright);">Journal</a>
                     </div>
                     <div class="space-y-3">

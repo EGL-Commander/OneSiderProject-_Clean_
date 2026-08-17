@@ -12,57 +12,31 @@ from .forms import RegisterForm
 def profile_view(request):
     profile = request.user.profile
 
-    saved_projects = (
-        profile.saved_projects
-        .select_related()
-        .prefetch_related('categories')
-    )
-
-    purchased_projects = (
-        Project.objects.filter(
-            purchases__user=request.user,
-            purchases__status='success'
-        )
-        .prefetch_related('categories')
-        .distinct()
-    )
-
-    owned_project_ids = set(
-        purchased_projects.values_list('id', flat=True)
-    )
-
     return render(
         request,
         "accounts/Profile (Latest).html",
         {
             "profile": profile,
-            "saved_projects": saved_projects,
-            "purchased_projects": purchased_projects,
-            "owned_project_ids": owned_project_ids,
         }
     )
 
 @login_required
 def edit_profile(request):
     profile = request.user.profile
-    
+
     if request.method == 'POST':
         form = ProfileUpdateForm(request.POST, request.FILES, instance=profile)
         if form.is_valid():
             form.save()
             return redirect('profile')
     else:
-        form = ProfileUpdateForm(instance=profile)    
+        form = ProfileUpdateForm(instance=profile)
 
     return render(request,'accounts/Edit Profile.html',{'form' : form})
 
 @never_cache
 def register_view(request):
 
-    # Mirrors LoginView's redirect_authenticated_user behavior: an
-    # already-authenticated user landing on /register/ (e.g. via
-    # back/forward navigation) should be sent on, not shown the form
-    # again as if they were signed out.
     if request.user.is_authenticated:
         next_url = request.POST.get("next") or request.GET.get("next") or "project_list"
         return redirect(next_url)
@@ -106,10 +80,23 @@ def library_view(request):
         .distinct()
     )
 
+    owned_project_ids = set(
+        purchased_projects.values_list("id", flat=True)
+    )
+
+    # No longer excludes owned projects — a saved project that's also
+    # purchased now shows in both sections, with the Owned badge in Saved.
+    saved_projects = (
+        request.user.profile.saved_projects
+        .prefetch_related("categories")
+    )
+
     return render(
         request,
         "accounts/Library.html",
         {
             "purchased_projects": purchased_projects,
+            "saved_projects": saved_projects,
+            "owned_project_ids": owned_project_ids,
         }
     )
