@@ -1,0 +1,189 @@
+{% extends 'base.html' %}
+
+{% block title %}About — OneSider{% endblock %}
+
+{% block content %}
+
+<section class="min-h-screen pt-32 pb-24 px-6">
+
+    <div class="max-w-4xl mx-auto">
+
+        <!-- Header -->
+        <div class="mb-16">
+
+            <p
+                class="text-xs tracking-[0.3em] uppercase mb-4"
+                style="color: var(--accent);"
+            >
+                OneSider / Commander
+            </p>
+
+            <h1
+                class="text-4xl md:text-5xl font-light tracking-wide mb-6"
+                style="color: var(--text-bright);"
+            >
+                About
+            </h1>
+
+            <p
+                class="text-sm leading-relaxed max-w-2xl"
+                style="color: var(--text-main);"
+            >
+                Not a team. Not a studio. One person, working alone, in silence.
+            </p>
+
+        </div>
+
+        <!-- Content -->
+        <div
+            class="border-t pt-10 space-y-12"
+            style="border-color: var(--border);"
+        >
+
+            <!-- 01 -->
+            <div>
+                <h2
+                    class="text-lg tracking-wide mb-4"
+                    style="color: var(--text-bright);"
+                >
+                    01. The Whole Thing
+                </h2>
+
+                <p
+                    class="text-sm leading-8"
+                    style="color: var(--text-main);"
+                >
+                    This entire site, and every single project listed inside it,
+                    was built by me. Alone. The design, the backend, the payment
+                    flow, the download system, every project on the shelf — one
+                    person, no team, no co-founder, no agency behind the curtain.
+                    OneSider is not a storefront I set up for other people's work.
+                    It's mine, end to end.
+                </p>
+            </div>
+
+            <!-- 02 -->
+            <div>
+                <h2
+                    class="text-lg tracking-wide mb-4"
+                    style="color: var(--text-bright);"
+                >
+                    02. Why "OneSider"
+                </h2>
+
+                <p
+                    class="text-sm leading-8"
+                    style="color: var(--text-main);"
+                >
+                    Built for those who move alone — that's not a tagline I
+                    borrowed, it's how this got made. No standups, no
+                    committee decisions on what shade of violet the accent
+                    color should be. One person deciding everything, and
+                    living with every consequence of that. If something here
+                    is sharp, that's why. If something here is still rough,
+                    that's why too.
+                </p>
+            </div>
+
+            <!-- 03 -->
+            <div>
+                <h2
+                    class="text-lg tracking-wide mb-4"
+                    style="color: var(--text-bright);"
+                >
+                    03. What I Actually Used
+                </h2>
+
+                <p
+                    class="text-sm leading-8"
+                    style="color: var(--text-main);"
+                >
+                    I'm not going to pretend I did this in total isolation —
+                    that would be a different kind of dishonest. Claude and
+                    ChatGPT sat with me through a good chunk of the build:
+                    architecture decisions, debugging sessions, the payment
+                    hardening, the UI polish passes. I directed every one of
+                    those sessions, made every final call, and wrote or
+                    rewrote what needed my hand on it. Credit where it's due,
+                    on both sides.
+                </p>
+            </div>
+
+            <!-- 04 -->
+            <div>
+                <h2
+                    class="text-lg tracking-wide mb-4"
+                    style="color: var(--text-bright);"
+                >
+                    04. What's On Here
+                </h2>
+
+                <p
+                    class="text-sm leading-8"
+                    style="color: var(--text-main);"
+                >
+                    Every project in the gallery is something I actually
+                    built and actually use as a reference for what "finished"
+                    looks like — not a placeholder, not a mockup padded out to
+                    look like a catalog. If it's listed, I stand behind it.
+                </p>
+            </div>
+
+            <!-- 05 -->
+            <div>
+                <h2
+                    class="text-lg tracking-wide mb-4"
+                    style="color: var(--text-bright);"
+                >
+                    05. Get In Touch
+                </h2>
+
+                <p
+                    class="text-sm leading-8"
+                    style="color: var(--text-main);"
+                >
+                    Questions about a project, a purchase, or anything else —
+                    the
+                    <a
+                        href="{% url 'contact' %}"
+                        class="transition"
+                        style="color: var(--text-bright); text-decoration: underline; text-underline-offset: 3px;"
+                    >
+                        Contact page
+                    </a>
+                    goes straight to me. No support team in between.
+                </p>
+            </div>
+
+        </div>
+
+        <!-- Bottom -->
+        <div
+            class="border-t mt-16 pt-8 flex flex-col md:flex-row justify-between gap-4"
+            style="border-color: var(--border);"
+        >
+
+            <span
+                class="text-[10px] tracking-widest uppercase opacity-40"
+                style="color: var(--text-main);"
+            >
+                OneSider
+            </span>
+
+            <a
+                href="/"
+                class="text-xs tracking-widest uppercase transition"
+                style="color: var(--text-main);"
+                onmouseover="this.style.color='var(--text-bright)'"
+                onmouseout="this.style.color='var(--text-main)'"
+            >
+                ← Back to Gallery
+            </a>
+
+        </div>
+
+    </div>
+
+</section>
+
+{% endblock %}

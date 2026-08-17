@@ -12,6 +12,7 @@ class ProjectMediaInline(admin.TabularInline):
 
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
-    list_display = ('title', 'slug', 'price', 'is_active')
+    list_display = ('title', 'slug', 'price', 'is_active', 'is_featured')
+    list_editable = ('is_featured',)
     readonly_fields = ('slug',)
     inlines = [ProjectMediaInline]

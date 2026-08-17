@@ -147,6 +147,10 @@
     // Each project: { title, price, slug, thumbnail_url, short_description }
     const trayData = {{ tray_data|safe }};
 
+    // Resolved via Django's actual URL routing (not a guessed path), then
+    // the placeholder is swapped for each project's real slug below.
+    const projectDetailUrlTemplate = "{% url 'project_detail' 'SLUG_PLACEHOLDER' %}";
+
     // ── TRAY CARD TEMPLATE ────────────────────────────────────────
     function createTrayCard(item) {
         const imgTag = item.thumbnail_url
@@ -155,8 +159,10 @@
             : `<div class="w-full h-full flex items-center justify-center text-xs tracking-widest uppercase"
                   style="color: var(--border);">No Image</div>`;
 
+        const href = projectDetailUrlTemplate.replace("SLUG_PLACEHOLDER", item.slug);
+
         return `
-            <a href="/gallery/${item.slug}/"
+            <a href="${href}"
                 class="min-w-[200px] sm:min-w-[240px] md:min-w-[260px] card-container block cursor-pointer animate-subtle">
                 <div class="aspect-[16/10] card-image-wrap" style="background: var(--bg-deep);">
                     ${imgTag}

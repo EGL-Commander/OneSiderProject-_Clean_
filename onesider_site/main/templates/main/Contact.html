@@ -1,0 +1,219 @@
+{% extends 'base.html' %}
+
+{% block title %}Contact — OneSider{% endblock %}
+
+{% block content %}
+
+<section
+    class="py-20"
+    style="padding-top: calc(var(--nav-height) + 80px); padding-bottom: 100px;">
+
+<div class="max-w-xl mx-auto px-6">
+
+    <!-- Header -->
+    <div class="flex items-center gap-6 mb-12">
+
+        <h2
+            class="text-xs uppercase tracking-[0.3em] font-medium"
+            style="color: var(--text-bright);">
+
+            Direct Line
+
+        </h2>
+
+        <div
+            class="h-[1px] flex-1"
+            style="background: var(--border);">
+        </div>
+
+    </div>
+
+    <!-- Contact Card -->
+    <div class="card-container p-8 md:p-10">
+
+        {% if sent %}
+
+            <div class="text-center py-6">
+
+                <div class="text-3xl mb-6 opacity-70">✓</div>
+
+                <h1
+                    class="text-2xl md:text-3xl mb-3"
+                    style="color: var(--text-bright);">
+
+                    Message Sent
+
+                </h1>
+
+                <p
+                    class="text-sm max-w-sm mx-auto"
+                    style="color: var(--text-main);">
+
+                    It goes straight to me, no support queue in between.
+                    I'll get back to you at the address you provided.
+
+                </p>
+
+                <a
+                    href="{% url 'contact' %}"
+                    class="inline-block mt-8 text-xs tracking-widest uppercase transition"
+                    style="color: var(--text-main);"
+                    onmouseover="this.style.color='var(--text-bright)'"
+                    onmouseout="this.style.color='var(--text-main)'">
+
+                    ← Send Another
+
+                </a>
+
+            </div>
+
+        {% else %}
+
+
+            {% if rate_limited %}
+                <div
+                    class="mb-8 border rounded-lg px-4 py-3"
+                    style="
+                        border-color: rgba(255,180,80,.25);
+                        background: rgba(255,180,80,.05);
+                    ">
+
+                    <p class="text-sm" style="color: var(--text-main);">
+                        You've sent several messages recently.
+                        Please try again later.
+                    </p>
+
+                </div>
+            {% endif %}
+
+            <div class="mb-10">
+
+                <h1
+                    class="text-2xl md:text-3xl mb-3"
+                    style="color: var(--text-bright);">
+
+                    Say Something
+
+                </h1>
+
+                <p
+                    class="text-sm"
+                    style="color: var(--text-main);">
+
+                    Questions, feedback, a broken link — whatever it is,
+                    it comes straight to me.
+
+                </p>
+
+            </div>
+
+            {% if form.non_field_errors %}
+                <div
+                    class="mb-8 border rounded-lg px-4 py-3"
+                    style="
+                        border-color: rgba(255,80,80,.25);
+                        background: rgba(255,80,80,.05);
+                    ">
+
+                    {% for error in form.non_field_errors %}
+                        <p class="text-sm text-red-400">{{ error }}</p>
+                    {% endfor %}
+
+                </div>
+            {% endif %}
+
+            <form method="POST" class="space-y-8" novalidate>
+
+                {% csrf_token %}
+
+                <!-- Honeypot - hidden from real visitors, left open for bots -->
+                <div style="position:absolute; left:-9999px; top:-9999px; height:0; width:0; overflow:hidden;" aria-hidden="true">
+                    {{ form.website }}
+                </div>
+
+                <!-- Name -->
+                <div>
+
+                    <label
+                        class="block text-xs uppercase tracking-widest mb-3"
+                        style="color: var(--text-main);">
+
+                        Name
+
+                    </label>
+
+                    {{ form.name }}
+
+                    {% if form.name.errors %}
+                        <p class="text-xs mt-2 text-red-400">{{ form.name.errors.0 }}</p>
+                    {% endif %}
+
+                </div>
+
+                <!-- Email -->
+                <div>
+
+                    <label
+                        class="block text-xs uppercase tracking-widest mb-3"
+                        style="color: var(--text-main);">
+
+                        Email
+
+                    </label>
+
+                    {{ form.email }}
+
+                    {% if form.email.errors %}
+                        <p class="text-xs mt-2 text-red-400">{{ form.email.errors.0 }}</p>
+                    {% endif %}
+
+                </div>
+
+                <!-- Message -->
+                <div>
+
+                    <label
+                        class="block text-xs uppercase tracking-widest mb-3"
+                        style="color: var(--text-main);">
+
+                        Message
+
+                    </label>
+
+                    {{ form.message }}
+
+                    {% if form.message.errors %}
+                        <p class="text-xs mt-2 text-red-400">{{ form.message.errors.0 }}</p>
+                    {% endif %}
+
+                </div>
+
+                <button
+                    type="submit"
+                    class="btn-premium w-full py-3 text-xs tracking-widest uppercase">
+
+                    Send Message
+
+                </button>
+
+            </form>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+</section>
+
+{% endblock %}
+
+{% block scripts %}
+
+<script>
+{% if sent %}
+    if (typeof toast === "function") toast("Message sent");
+{% endif %}
+</script>
+
+{% endblock %}
