@@ -1,3 +1,5 @@
+import logging
+
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import Project, Category, Tag
 from django.db.models import Q, F, Case, When, IntegerField
@@ -12,6 +14,8 @@ from django.conf import settings
 from django.http import JsonResponse
 from django.core.paginator import Paginator
 from django.urls import reverse
+
+logger = logging.getLogger(__name__)
 
 STOP_WORDS = {
     "a", "an", "the",
@@ -314,8 +318,19 @@ def download_with_token(request, token):
     
     try:
         filename, mimetype, fh = download_file_bytes(token_obj.project.cloud_file_id)
-    except Exception as e:
-        
+    except Exception:
+
+        # Always log server-side so a Cloud Storage/Drive failure is
+        # actually visible to us - this was previously swallowed
+        # silently outside of DEBUG. The exception details below are
+        # still only ever shown to the user when DEBUG=True; in
+        # production the template only renders the generic message.
+        logger.exception(
+            "Download failed for project=%s cloud_file_id=%s",
+            token_obj.project.slug,
+            token_obj.project.cloud_file_id,
+        )
+
         context = {
             "project" : token_obj.project
         }
