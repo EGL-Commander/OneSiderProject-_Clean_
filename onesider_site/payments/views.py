@@ -164,13 +164,22 @@ def _send_purchase_receipt(purchase_id):
         send_mail(
             subject=f"OneSider — Purchase Confirmed — {purchase.project.title}",
             message=(
-                "Your OneSider purchase has been confirmed.\n\n"
+                "Your OneSider Purchase has been Confirmed.\n\n"
+                "Purchase Details:\n\n"
                 f"Project: {purchase.project.title}\n"
-                f"Amount: ₹{purchase.project.price}\n"
+                f"Amount Paid: ₹{purchase.project.price}\n"
                 f"Purchase ID: {purchase.id}\n"
-                f"Razorpay payment ID: {purchase.razorpay_payment_id}\n"
-                f"Purchased at: {purchase.purchased_at}\n\n"
-                "Your purchase is now available in your OneSider account."
+                f"Purchased On: {purchase.purchased_at}\n\n"
+
+                "Your Purchase is Now Available in Your OneSider Account.\n\n"
+
+                "Keep this E-mail as Your Purchase Confirmation and Reference it"
+                " if You Ever Need Support Regarding this Purchase.\n\n\n"
+
+                "Forged in Silence\n\n"
+
+                "OneSider"
+
             ),
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[purchase.user.email],

@@ -192,11 +192,6 @@ class PurchaseReceiptTests(TestCase):
             email.body,
         )
 
-        self.assertIn(
-            "pay_receipt123",
-            email.body,
-        )
-
     def test_receipt_not_sent_twice(self):
         with self.captureOnCommitCallbacks(execute=True):
             _confirm_purchase(
