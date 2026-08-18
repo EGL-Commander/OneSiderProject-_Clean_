@@ -9,8 +9,9 @@ from datetime import timedelta
 
 class Purchase(models.Model):
     STATUS_CHOICES = (
+        ('pending', 'Pending'),
         ('success', 'Success'),
-        ('failed', 'Failed')
+        ('failed', 'Failed'),
     )
 
     user = models.ForeignKey(
@@ -49,7 +50,7 @@ class Purchase(models.Model):
     status = models.CharField(
         max_length=10,
         choices = STATUS_CHOICES,
-        default='failed'
+        default='pending'
     )
 
     purchased_at = models.DateTimeField(auto_now_add=True)

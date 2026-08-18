@@ -11,6 +11,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction
 from django.conf import settings
 from django.db.models import F
+from django.core.mail import send_mail
 
 from projects.models import Project
 from purchases.models import Purchase
@@ -89,7 +90,7 @@ def create_order(request, slug):
         user=request.user,
         project=project,
         defaults={
-            'status': 'failed',
+            'status': 'pending',
             'razorpay_payment_link_id': payment_link['id']
         }
     )
@@ -132,8 +133,55 @@ def _confirm_purchase(purchase_id, payment_id):
             purchases_count=F("purchases_count") + 1
         )
 
+        transaction.on_commit(
+            lambda: _send_purchase_receipt(purchase_id)
+        )
+
+        # Customer receipt is a best-effort side effect, not part of
+        # what makes this purchase successful. transaction.on_commit
+        # means it only fires after the status='success' row above has
+        # actually been committed. It only runs on this branch, guarded
+        # by select_for_update + the status check above, so it cannot
+        # be triggered twice for the same purchase.
+
         return purchase
 
+def _send_purchase_receipt(purchase_id):
+    try:
+        purchase = (
+            Purchase.objects
+            .select_related("user", "project")
+            .get(pk=purchase_id)
+        )
+
+        if not purchase.user.email:
+            logger.warning(
+                "Purchase %s has no customer email; receipt not sent.",
+                purchase_id,
+            )
+            return
+
+        send_mail(
+            subject=f"OneSider — Purchase Confirmed — {purchase.project.title}",
+            message=(
+                "Your OneSider purchase has been confirmed.\n\n"
+                f"Project: {purchase.project.title}\n"
+                f"Amount: ₹{purchase.project.price}\n"
+                f"Purchase ID: {purchase.id}\n"
+                f"Razorpay payment ID: {purchase.razorpay_payment_id}\n"
+                f"Purchased at: {purchase.purchased_at}\n\n"
+                "Your purchase is now available in your OneSider account."
+            ),
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[purchase.user.email],
+            fail_silently=True,
+        )
+
+    except Purchase.DoesNotExist:
+        logger.warning(
+            "Purchase %s not found while sending receipt.",
+            purchase_id,
+        )
 
 @login_required
 def payment_success(request):

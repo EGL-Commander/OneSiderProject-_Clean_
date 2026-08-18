@@ -9,6 +9,8 @@ from purchases.models import Purchase
 
 from .views import _confirm_purchase
 
+from django.core import mail
+
 
 class ConfirmPurchaseIdempotencyTests(TestCase):
     """
@@ -36,7 +38,7 @@ class ConfirmPurchaseIdempotencyTests(TestCase):
         self.purchase = Purchase.objects.create(
             user=self.user,
             project=self.project,
-            status="failed",
+            status="pending",
             razorpay_payment_link_id="plink_test123",
         )
 
@@ -84,7 +86,7 @@ class RazorpayWebhookTests(TestCase):
         self.purchase = Purchase.objects.create(
             user=self.user,
             project=self.project,
-            status="failed",
+            status="pending",
             razorpay_payment_link_id="plink_webhook123",
         )
 
@@ -135,4 +137,154 @@ class RazorpayWebhookTests(TestCase):
         self.assertEqual(response.status_code, 400)
 
         self.purchase.refresh_from_db()
-        self.assertEqual(self.purchase.status, "failed")
+        self.assertEqual(self.purchase.status, "pending")
+
+@override_settings(DEFAULT_FROM_EMAIL="noreply@onesider.in")
+class PurchaseReceiptTests(TestCase):
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="receiptbuyer",
+            email="receiptbuyer@example.com",
+            password="pass1234",
+        )
+
+        self.project = Project.objects.create(
+            title="Receipt Project",
+            short_description="A test project",
+            description="Full description",
+            project_type="web",
+            price=799,
+            cloud_storage_type="gdrive",
+            cloud_file_id="fake-receipt-id",
+        )
+
+        self.purchase = Purchase.objects.create(
+            user=self.user,
+            project=self.project,
+            status="pending",
+            razorpay_payment_link_id="plink_receipt123",
+        )
+
+    def test_receipt_sent_after_successful_purchase(self):
+        with self.captureOnCommitCallbacks(execute=True):
+            _confirm_purchase(
+                self.purchase.id,
+                "pay_receipt123",
+            )
+
+        self.assertEqual(len(mail.outbox), 1)
+
+        email = mail.outbox[0]
+
+        self.assertEqual(
+            email.to,
+            ["receiptbuyer@example.com"],
+        )
+
+        self.assertIn(
+            "Receipt Project",
+            email.subject,
+        )
+
+        self.assertIn(
+            str(self.purchase.id),
+            email.body,
+        )
+
+        self.assertIn(
+            "pay_receipt123",
+            email.body,
+        )
+
+    def test_receipt_not_sent_twice(self):
+        with self.captureOnCommitCallbacks(execute=True):
+            _confirm_purchase(
+                self.purchase.id,
+                "pay_receipt123",
+            )
+
+        with self.captureOnCommitCallbacks(execute=True):
+            _confirm_purchase(
+                self.purchase.id,
+                "pay_receipt123",
+            )
+
+        self.assertEqual(len(mail.outbox), 1)
+
+    def test_missing_customer_email_does_not_break_purchase(self):
+        self.user.email = ""
+        self.user.save(update_fields=["email"])
+
+        with self.captureOnCommitCallbacks(execute=True):
+            _confirm_purchase(
+                self.purchase.id,
+                "pay_receipt123",
+            )
+
+        self.purchase.refresh_from_db()
+
+        self.assertEqual(
+            self.purchase.status,
+            "success",
+        )
+
+        self.assertEqual(len(mail.outbox), 0)
+
+class PurchaseStatusTests(TestCase):
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="statusbuyer",
+            password="pass1234",
+        )
+
+        self.project = Project.objects.create(
+            title="Status Project",
+            short_description="A test project",
+            description="Full description",
+            project_type="web",
+            price=299,
+            cloud_storage_type="gdrive",
+            cloud_file_id="fake-status-id",
+        )
+
+    def test_purchase_is_stored_as_pending(self):
+        purchase = Purchase.objects.create(
+            user=self.user,
+            project=self.project,
+            razorpay_payment_link_id="plink_status123",
+        )
+
+        purchase.refresh_from_db()
+
+        self.assertEqual(purchase.status, "pending")
+
+    def test_purchase_can_be_stored_as_failed(self):
+        purchase = Purchase.objects.create(
+            user=self.user,
+            project=self.project,
+            status="failed",
+            razorpay_payment_link_id="plink_failed123",
+        )
+
+        purchase.refresh_from_db()
+
+        self.assertEqual(purchase.status, "failed")
+
+    def test_purchase_can_be_stored_as_success(self):
+        purchase = Purchase.objects.create(
+            user=self.user,
+            project=self.project,
+            status="success",
+            razorpay_payment_link_id="plink_success123",
+            razorpay_payment_id="pay_success123",
+        )
+
+        purchase.refresh_from_db()
+
+        self.assertEqual(purchase.status, "success")
+        self.assertEqual(
+            purchase.razorpay_payment_id,
+            "pay_success123",
+        )
